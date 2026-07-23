@@ -14,7 +14,7 @@ export interface DecodedUser {
   id: string;
   name: string;
   email: string;
-  role: 'USER' | 'ADMIN'|"AUTHOR";
+  role: 'USER' | 'ADMIN';
   iat: number;
   exp: number;
 }
