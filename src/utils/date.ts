@@ -1,4 +1,4 @@
-export function timeAgo(isoDate: string): string {
+export function formatTimeAgo(isoDate: string): string {
   const date = new Date(isoDate);
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 

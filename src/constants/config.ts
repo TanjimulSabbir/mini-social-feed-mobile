@@ -1,4 +1,6 @@
-export const API_BASE_URL: string = "http://localhost:7000/api";
+const production = "https://backend-mini-social-app.vercel.app/api";
+const development = "http://localhost:7000/api";
+export const API_BASE_URL: string = development;
 
 export const PAGE_SIZE = 10;
 

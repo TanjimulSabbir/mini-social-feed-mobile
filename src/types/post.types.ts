@@ -17,14 +17,7 @@ export interface Post {
   author?: AuthorSummary;
 
   _count?: { likes: number; comments: number };
-  isLiked?: boolean;
-  likes?: {
-    id: string;
-    userId: string;
-    postId: string;
-    createdAt: string;
-  }[];
-  comments?: Comment[];
+  isLikedByMe?: boolean;
 }
 
 export interface CreatePostPayload {

@@ -1,9 +1,8 @@
-
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { likeApi } from '@/api/like.api';
-import { postKeys } from '@/api/query-keys';
-import { CreatePostPayload, Post, UpdatePostPayload } from '@/types/post.types';
-import { postApi } from '@/api/posts.api';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { likeApi } from "@/api/like.api";
+import { postKeys } from "@/api/query-keys";
+import { CreatePostPayload, Post, UpdatePostPayload } from "@/types/post.types";
+import { postApi } from "@/api/posts.api";
 
 export function useCreatePost() {
   const queryClient = useQueryClient();
@@ -19,8 +18,13 @@ export function useCreatePost() {
 export function useUpdatePost() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ postId, payload }: { postId: string; payload: UpdatePostPayload }) =>
-      postApi.updatePost(postId, payload),
+    mutationFn: ({
+      postId,
+      payload,
+    }: {
+      postId: string;
+      payload: UpdatePostPayload;
+    }) => postApi.updatePost(postId, payload),
     onSuccess: (updated) => {
       queryClient.setQueryData(postKeys.detail(updated.id), updated);
       queryClient.invalidateQueries({ queryKey: postKeys.list() });
@@ -40,7 +44,11 @@ export function useDeletePost() {
   });
 }
 
-function patchPostInCache(oldData: any, postId: string, transform: (p: Post) => Post) {
+function patchPostInCache(
+  oldData: any,
+  postId: string,
+  transform: (p: Post) => Post,
+) {
   if (!oldData) return oldData;
   if (Array.isArray(oldData)) {
     return oldData.map((p: Post) => (p.id === postId ? transform(p) : p));
@@ -50,7 +58,9 @@ function patchPostInCache(oldData: any, postId: string, transform: (p: Post) => 
       ...oldData,
       pages: oldData.pages.map((page: any) => ({
         ...page,
-        posts: page.posts.map((p: Post) => (p.id === postId ? transform(p) : p)),
+        posts: page.posts.map((p: Post) =>
+          p.id === postId ? transform(p) : p,
+        ),
       })),
     };
   }
@@ -67,7 +77,7 @@ export function useToggleLike() {
       const previous = queryClient.getQueriesData({ queryKey: postKeys.all });
 
       queryClient.setQueriesData({ queryKey: postKeys.all }, (old) =>
-        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLiked }))
+        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLiked })),
       );
 
       return { previous };
