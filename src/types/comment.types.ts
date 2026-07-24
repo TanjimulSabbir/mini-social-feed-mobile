@@ -7,6 +7,7 @@ export interface Comment {
   content: string;
   authorId: string;
   author?: AuthorSummary;
+  authorName: string;
   postId: string;
   status: CommentStatus;
   createdAt: string;

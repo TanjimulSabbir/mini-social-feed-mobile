@@ -37,7 +37,7 @@ export default function CreatePostScreen() {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       setTitle("");
       setContent("");
-      router.push("/");
+      router.back();
     },
     onError: (err) => {
       setError(getErrorMessage(err));

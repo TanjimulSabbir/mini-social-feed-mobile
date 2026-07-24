@@ -2,29 +2,55 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCreateComment } from "@/hooks/useCommentMutations";
 import { Post } from "@/types/post.types";
+import { Comment } from "@/types/comment.types";
+import { User } from "@/types/user.types";
 
 interface PostCardProps {
   post: Post;
   highlighted?: boolean;
   onToggleLike: (postId: string) => void;
+  me:User
 }
 
-export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
+function CommentRow({ comment }: { comment: Comment }) {
+  const authorName = comment.authorName ?? "Anonymous";
+  return (
+    <View style={styles.commentRow}>
+      <View style={styles.commentAvatar}>
+        <Text style={styles.commentAvatarText}>
+          {authorName.charAt(0).toUpperCase()}
+        </Text>
+      </View>
+      <View style={styles.commentBody}>
+        <Text style={styles.commentAuthor}>{authorName}</Text>
+        <Text style={styles.commentContent}>{comment.content}</Text>
+      </View>
+    </View>
+  );
+}
+
+export function PostCard({ post, highlighted, onToggleLike, me }: PostCardProps) {
   const [commentText, setCommentText] = useState("");
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const createComment = useCreateComment();
 
-  const likesCount = post._count?.likes ?? 0;
-  const commentsCount = post._count?.comments ?? 0;
-  const authorName = post.author?.name ?? "Anonymous";
+  const isLiked = post?.likes?.length ? true : false;
+  const likesCount = isLiked ? post?.likes?.length :0;
+  const comments = post?.comments ?? [];
+  const commentsCount = post?.comments?.length ?? 0;
+  const authorName = post?.author?.name ?? "Anonymous";
 
   function handleSubmitComment() {
     const trimmed = commentText.trim();
@@ -54,23 +80,26 @@ export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
       {/* Action Bar */}
       <View style={styles.actions}>
         <Pressable
-          style={[styles.actionBtn, post.isLiked && styles.actionBtnActive]}
+          style={[styles.actionBtn, isLiked && styles.actionBtnActive]}
           onPress={() => onToggleLike(post.id)}
         >
           <Ionicons
-            name={post.isLiked ? "heart" : "heart-outline"}
+            name={isLiked ? "heart" : "heart-outline"}
             size={18}
-            color={post.isLiked ? "#A3E635" : "#94A3B8"}
+            color={post.likes?.some((l) => l.userId === me.id) ? "#A3E635" : "#94A3B8"}
           />
-          <Text style={[styles.actionText, post.isLiked && styles.actionTextActive]}>
+          <Text style={[styles.actionText, isLiked && styles.actionTextActive]}>
             {likesCount}
           </Text>
         </Pressable>
 
-        <View style={styles.actionBtn}>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={() => setIsCommentsOpen(true)}
+        >
           <Ionicons name="chatbubble-outline" size={17} color="#94A3B8" />
           <Text style={styles.actionText}>{commentsCount}</Text>
-        </View>
+        </Pressable>
       </View>
 
       {/* Comment Input Row */}
@@ -87,7 +116,8 @@ export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
         <Pressable
           style={[
             styles.sendBtn,
-            (!commentText.trim() || createComment.isPending) && styles.sendBtnDisabled,
+            (!commentText.trim() || createComment.isPending) &&
+              styles.sendBtnDisabled,
           ]}
           onPress={handleSubmitComment}
           disabled={!commentText.trim() || createComment.isPending}
@@ -99,13 +129,78 @@ export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
           )}
         </Pressable>
       </View>
+
+      {/* Comments Modal */}
+      <Modal
+        visible={isCommentsOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsCommentsOpen(false)}
+      >
+        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              Comments {commentsCount > 0 ? `(${commentsCount})` : ""}
+            </Text>
+            <Pressable
+              onPress={() => setIsCommentsOpen(false)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={22} color="#94A3B8" />
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <CommentRow comment={item} />}
+            contentContainerStyle={styles.modalListContent}
+            ListEmptyComponent={
+              <View style={styles.modalEmpty}>
+                <Ionicons name="chatbubble-outline" size={28} color="#64748B" />
+                <Text style={styles.modalEmptyText}>
+                  No comments yet — be the first!
+                </Text>
+              </View>
+            }
+          />
+
+          {/* Reuse the same input inside the modal for convenience */}
+          <View style={[styles.commentInputRow, styles.modalInputRow]}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment…"
+              placeholderTextColor="#64748B"
+              value={commentText}
+              onChangeText={setCommentText}
+              onSubmitEditing={handleSubmitComment}
+              returnKeyType="send"
+            />
+            <Pressable
+              style={[
+                styles.sendBtn,
+                (!commentText.trim() || createComment.isPending) &&
+                  styles.sendBtnDisabled,
+              ]}
+              onPress={handleSubmitComment}
+              disabled={!commentText.trim() || createComment.isPending}
+            >
+              {createComment.isPending ? (
+                <ActivityIndicator size="small" color="#071A1B" />
+              ) : (
+                <Ionicons name="send" size={15} color="#071A1B" />
+              )}
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "rgba(20, 38, 38, 0.75)", // Dark teal card background
+    backgroundColor: "rgba(20, 38, 38, 0.75)",
     borderRadius: 20,
     padding: 18,
     marginHorizontal: 16,
@@ -222,5 +317,85 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     opacity: 0.4,
+  },
+
+  // Modal styles
+  modalSafeArea: {
+    flex: 1,
+    backgroundColor: "#071A1B",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#F8FAFC",
+  },
+  modalListContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
+    flexGrow: 1,
+  },
+  modalEmpty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    gap: 10,
+  },
+  modalEmptyText: {
+    color: "#64748B",
+    fontSize: 13,
+  },
+  commentRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    backgroundColor: "rgba(163, 230, 53, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(163, 230, 53, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  commentAvatarText: {
+    color: "#A3E635",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  commentBody: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 12,
+    padding: 10,
+  },
+  commentAuthor: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#A3E635",
+    marginBottom: 3,
+  },
+  commentContent: {
+    fontSize: 13,
+    color: "#E2E8F0",
+    lineHeight: 18,
+  },
+  modalInputRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
   },
 });

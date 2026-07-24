@@ -35,7 +35,7 @@ export default function SignupScreen() {
       return await signup(data);
     },
     onSuccess: () => {
-      router.replace("/(tabs)/feed");
+      router.replace("/(tabs)");
     },
   });
 

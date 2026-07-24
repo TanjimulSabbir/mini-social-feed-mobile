@@ -55,7 +55,7 @@ export default function LoginScreen() {
     try {
       const user = await login({ email: email.trim(), password });
       console.log(user, "login result");
-      router.replace("/(tabs)/feed");
+      router.replace("/(tabs)");
     } catch (err) {
       setFormError(
         err instanceof Error

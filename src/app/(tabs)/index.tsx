@@ -15,8 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PostCard } from "@/components/post/post-card";
 import { usePostsInfinite } from "@/hooks/posts/usePostInfinite";
 import { useToggleLike } from "@/hooks/posts/usePostMutation";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function FeedScreen() {
+  const me = useAuthStore((s) => s.user);
   const router = useRouter();
   const { highlightPostId } = useLocalSearchParams<{
     highlightPostId?: string;
@@ -73,6 +75,7 @@ export default function FeedScreen() {
           renderItem={({ item }) => (
             <PostCard
               post={item}
+              me={me}
               highlighted={item.id === highlightPostId}
               onToggleLike={(postId) => toggleLike.mutate(postId)}
               onAddComment={() => {}}

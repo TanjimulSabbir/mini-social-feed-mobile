@@ -1,4 +1,5 @@
 import { AuthorSummary } from "./user.types";
+import { Comment } from "./comment.types";
 
 export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
@@ -17,6 +18,13 @@ export interface Post {
 
   _count?: { likes: number; comments: number };
   isLiked?: boolean;
+  likes?: {
+    id: string;
+    userId: string;
+    postId: string;
+    createdAt: string;
+  }[];
+  comments?: Comment[];
 }
 
 export interface CreatePostPayload {
