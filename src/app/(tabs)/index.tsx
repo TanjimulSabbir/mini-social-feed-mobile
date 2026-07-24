@@ -7,14 +7,13 @@ import {
   RefreshControl,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PostCard } from "@/components/post/post-card";
 import { usePostsInfinite } from "@/hooks/posts/usePostInfinite";
 import { useToggleLike } from "@/hooks/posts/usePostMutation";
-import { useAuthStore } from "@/store/auth.store";
 import { FeedStyles as styles } from "@/styles/feed.styles";
 
 export default function FeedScreen() {
@@ -76,7 +75,6 @@ export default function FeedScreen() {
               post={item}
               highlighted={item.id === highlightPostId}
               onToggleLike={(postId) => toggleLike.mutate(postId)}
-              onAddComment={() => {}}
             />
           )}
           contentContainerStyle={styles.listContent}

@@ -6,9 +6,9 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,8 +16,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { postApi } from "@/api/posts.api";
 import { PostCreateStyles as styles } from "@/styles/post.create.styles";
 import { getErrorMessage } from "@/utils/error.utils";
+import { generateRandomPost } from "@/data/generate.post";
 
-const MAX_CONTENT_LENGTH = 1080;
 const MAX_TITLE_LENGTH = 255;
 
 export default function CreatePostScreen() {
@@ -44,6 +44,13 @@ export default function CreatePostScreen() {
     },
   });
 
+  function handleGeneratePost() {
+    const generated = generateRandomPost(title);
+    setTitle(generated.title);
+    setContent(generated.content);
+    if (error) setError(null);
+  }
+
   function handleSubmit() {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
@@ -60,7 +67,9 @@ export default function CreatePostScreen() {
     createPostMutation.mutate({ title: trimmedTitle, content: trimmedContent });
   }
 
-  const remainingChars = MAX_CONTENT_LENGTH - content.length;
+  const contentLength = content.length;
+  const isPublishDisabled =
+    !title.trim() || !content.trim() || createPostMutation.isPending;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -71,39 +80,52 @@ export default function CreatePostScreen() {
         <View style={styles.container}>
           {/* Header Bar */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.closeBtn}
+            <Pressable
+              style={({ pressed }) => [
+                styles.closeBtn,
+                pressed && styles.closeBtnPressed,
+              ]}
               onPress={() => router.back()}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Ionicons name="close" size={20} color="#94A3B8" />
-            </TouchableOpacity>
+              <Ionicons name="close" size={20} color="#CBD5E1" />
+            </Pressable>
 
-            <Text style={styles.headerTitle}>New Post</Text>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>New Post</Text>
+            </View>
 
-            <TouchableOpacity
-              style={[
+            <Pressable
+              style={({ pressed }) => [
                 styles.publishBtn,
-                (!title.trim() ||
-                  !content.trim() ||
-                  createPostMutation.isPending) &&
-                  styles.btnDisabled,
+                isPublishDisabled && styles.btnDisabled,
+                pressed && !isPublishDisabled && styles.publishBtnPressed,
               ]}
               onPress={handleSubmit}
-              disabled={
-                !title.trim() || !content.trim() || createPostMutation.isPending
-              }
-              activeOpacity={0.8}
+              disabled={isPublishDisabled}
             >
               {createPostMutation.isPending ? (
                 <ActivityIndicator size="small" color="#071A1B" />
               ) : (
-                <Text style={styles.publishBtnText}>Publish</Text>
+                <View style={styles.publishBtnContent}>
+                  <Text
+                    style={[
+                      styles.publishBtnText,
+                      isPublishDisabled && styles.publishBtnTextDisabled,
+                    ]}
+                  >
+                    Publish
+                  </Text>
+                  <Ionicons
+                    name="arrow-up"
+                    size={14}
+                    color={isPublishDisabled ? "#64748B" : "#071A1B"}
+                  />
+                </View>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
-          {/* Form Card */}
           <View style={styles.card}>
             {error && (
               <View style={styles.bannerError}>
@@ -116,54 +138,66 @@ export default function CreatePostScreen() {
               </View>
             )}
 
-            {/* Title Input */}
-            <TextInput
-              style={[
-                styles.titleInput,
-                isTitleFocused && styles.titleInputFocused,
-              ]}
-              placeholder="Title your post..."
-              placeholderTextColor="#64748B"
-              value={title}
-              onChangeText={setTitle}
-              onFocus={() => setIsTitleFocused(true)}
-              onBlur={() => setIsTitleFocused(false)}
-              maxLength={MAX_TITLE_LENGTH}
-            />
-
-            {/* Content Body Input */}
             <View
               style={[
-                styles.contentInputContainer,
-                isContentFocused && styles.contentInputContainerFocused,
+                styles.titleInputContainer,
+                isTitleFocused && styles.inputFocused,
               ]}
             >
               <TextInput
-                style={styles.contentInput}
-                placeholder="What's on your mind?"
+                style={[styles.titleInput, { outlineStyle: "none" } as any]}
+                placeholder="Title your post..."
                 placeholderTextColor="#64748B"
-                value={content}
-                onChangeText={setContent}
-                onFocus={() => setIsContentFocused(true)}
-                onBlur={() => setIsContentFocused(false)}
-                maxLength={MAX_CONTENT_LENGTH}
-                multiline
+                value={title}
+                onChangeText={(val) => {
+                  setTitle(val);
+                  if (error) setError(null);
+                }}
+                onFocus={() => setIsTitleFocused(true)}
+                onBlur={() => setIsTitleFocused(false)}
+                maxLength={MAX_TITLE_LENGTH}
               />
             </View>
 
-            {/* Card Footer Info */}
+            <View
+              style={[
+                styles.contentInputContainer,
+                isContentFocused && styles.inputFocused,
+              ]}
+            >
+              <TextInput
+                style={[styles.contentInput, { outlineStyle: "none" } as any]}
+                placeholder="What's on your mind?"
+                placeholderTextColor="#64748B"
+                value={content}
+                onChangeText={(val) => {
+                  setContent(val);
+                  if (error) setError(null);
+                }}
+                onFocus={() => setIsContentFocused(true)}
+                onBlur={() => setIsContentFocused(false)}
+                multiline
+                textAlignVertical="top"
+              />
+            </View>
+
             <View style={styles.cardFooter}>
-              <View style={styles.charCountGroup}>
-                <Ionicons name="sparkles-outline" size={16} color="#A3E635" />
-              </View>
-              <Text
-                style={[
-                  styles.charCountText,
-                  remainingChars <= 20 && styles.charCountLimit,
+              <Pressable
+                style={({ pressed }) => [
+                  styles.generateBtn,
+                  pressed && styles.generateBtnPressed,
                 ]}
+                onPress={handleGeneratePost}
               >
-                {remainingChars} characters left
-              </Text>
+                <Ionicons name="sparkles" size={14} color="#A3E635" />
+                <Text style={styles.generateBtnText}>Generate Post</Text>
+              </Pressable>
+
+              <View style={[styles.charCountBadge]}>
+                <Text style={[styles.charCountText]}>
+                  {contentLength} Characters
+                </Text>
+              </View>
             </View>
           </View>
         </View>

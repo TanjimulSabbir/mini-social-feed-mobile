@@ -5,6 +5,11 @@ const GlobalStyle = StyleSheet.create({
     fontWeight: "500",
     color: "#64748B",
   },
+  commentInputFocused: {
+    borderColor: "#A3E635",
+    borderWidth: 1.5,
+    outlineColor: "#A3E635",
+  },
 });
 
 export default GlobalStyle;

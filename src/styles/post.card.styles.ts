@@ -110,6 +110,9 @@ export const postCardStyles = StyleSheet.create({
     color: "#F8FAFC",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
+
+    outlineStyle: "dashed",
+    outlineWidth: 0,
   },
   sendBtn: {
     width: 38,
