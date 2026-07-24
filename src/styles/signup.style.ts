@@ -107,6 +107,8 @@ export const SignupScreenStyles = StyleSheet.create({
     flex: 1,
     color: "#F8FAFC",
     fontSize: 15,
+    outlineStyle:"dashed",
+    outlineWidth: 0,
   },
   fieldErrorText: {
     color: "#F87171",

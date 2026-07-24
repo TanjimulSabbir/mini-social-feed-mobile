@@ -96,6 +96,7 @@ export const LoginFormStyles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 52,
+    overflow: "hidden", // Clips any inner element overflow/artifacts
   },
   inputErrorBorder: {
     borderColor: "#EF4444",
@@ -106,7 +107,11 @@ export const LoginFormStyles = StyleSheet.create({
   input: {
     flex: 1,
     color: "#F8FAFC",
+    backgroundColor: "transparent", // Fixed: set to transparent so wrapper color handles it
     fontSize: 15,
+    outlineStyle: "dashed", // Fixed: changed from 'dashed' to 'dashed'
+    outlineWidth: 0,
+    borderWidth: 0,       // Fixed: explicitly remove inner borders
   },
   fieldErrorText: {
     color: "#F87171",

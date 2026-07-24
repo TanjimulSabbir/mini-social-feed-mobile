@@ -38,6 +38,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: async () => {
+    if (useAuthStore.getState().isHydrated) return;
+
     try {
       const token = await storageService.getAccessToken();
 
@@ -59,9 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: false,
         isHydrated: true,
       });
-    } catch (error) {
-      console.log("Hydration failed:", error);
-
+    } catch {
       set({
         user: null,
         isAuthenticated: false,

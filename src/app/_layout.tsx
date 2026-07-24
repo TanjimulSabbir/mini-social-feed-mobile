@@ -1,52 +1,10 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, useRouter, useSegments } from "expo-router";
-import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useAuthStore } from "@/store/auth.store";
 import { queryClient } from "@/lib/query-client";
-import { StatusBar } from "expo-status-bar";
 import { Slot } from "expo-router";
-
-function AuthGate({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const segments = useSegments();
-  const { isAuthenticated, isHydrated, hydrate } = useAuthStore();
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/(auth)/login");
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
-    }
-  }, [isAuthenticated, isHydrated, segments, router]);
-
-  if (!isHydrated) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#071A1B",
-        }}
-      >
-        <ActivityIndicator size="large" color="#A3E635" />
-      </View>
-    );
-  }
-
-  return <>{children}</>;
-}
+import { StatusBar } from "expo-status-bar";
+import AuthGate from "@/utils/auth-gate";
 
 export default function RootLayout() {
   return (
