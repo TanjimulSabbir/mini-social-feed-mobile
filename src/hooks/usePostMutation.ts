@@ -1,0 +1,70 @@
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { likeApi } from '@/api/like.api';
+import { postKeys } from '@/api/query-keys';
+import { CreatePostPayload, Post, UpdatePostPayload } from '@/types/post.types';
+import { postApi } from '@/api/posts.api';
+
+export function useCreatePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreatePostPayload) => postApi.createPost(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+      queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
+    },
+  });
+}
+
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, payload }: { postId: string; payload: UpdatePostPayload }) =>
+      postApi.updatePost(postId, payload),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(postKeys.detail(updated.id), updated);
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+      queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
+    },
+  });
+}
+
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) => postApi.deletePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+      queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
+    },
+  });
+}
+
+export function useToggleLike() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: string) => likeApi.toggleLike({ postId }),
+
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.list() });
+      const previousPosts = queryClient.getQueryData<Post[]>(postKeys.list());
+
+      queryClient.setQueryData<Post[]>(postKeys.list(), (old) =>
+        old?.map((p) => (p.id === postId ? { ...p, isLiked: !p.isLiked } : p))
+      );
+
+      return { previousPosts };
+    },
+
+    onError: (_err, _postId, context) => {
+      if (context?.previousPosts) {
+        queryClient.setQueryData(postKeys.list(), context.previousPosts);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+    },
+  });
+}

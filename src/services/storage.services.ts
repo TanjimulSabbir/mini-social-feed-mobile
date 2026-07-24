@@ -11,15 +11,15 @@ export const storageService = {
   },
 
   async getAccessToken(): Promise<string | null> {
-    return AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    return AsyncStorage?.getItem(ACCESS_TOKEN_KEY);
   },
 
   async getRefreshToken(): Promise<string | null> {
-    return AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    return AsyncStorage?.getItem(REFRESH_TOKEN_KEY);
   },
 
   async clearTokens(): Promise<void> {
-    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
-    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+    await AsyncStorage?.removeItem(ACCESS_TOKEN_KEY);
+    await AsyncStorage?.removeItem(REFRESH_TOKEN_KEY);
   },
 };

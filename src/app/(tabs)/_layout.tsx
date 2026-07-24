@@ -1,11 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
-
-import { useNotificationsStore } from "@/store/notifications.store";
 
 export default function TabsLayout() {
-  const unreadCount = useNotificationsStore((s) => s.unreadCount);
+  // const unreadCount = useNotificationsStore((s) => s.unreadCount);
 
   return (
     <Tabs
@@ -35,7 +32,7 @@ export default function TabsLayout() {
         name="notifications"
         options={{
           title: "Alerts",
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadge: 1 > 0 ? 0 : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="notifications" size={size} color={color} />
           ),

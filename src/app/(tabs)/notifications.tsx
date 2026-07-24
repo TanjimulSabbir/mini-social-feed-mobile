@@ -12,15 +12,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useNotificationsStore } from "@/store/notifications.store";
-import { AppNotification } from "@/types/app.types";
 import { timeAgo } from "@/utils/date";
 
 function NotificationRow({
   notification,
   onPress,
 }: {
-  notification: AppNotification;
+  notification: any;
   onPress: () => void;
 }) {
   return (
@@ -37,7 +35,9 @@ function NotificationRow({
       />
       <View style={styles.rowBody}>
         <Text style={styles.rowText}>
-          <Text style={styles.rowUsername}>{notification.fromUser.username}</Text>{" "}
+          <Text style={styles.rowUsername}>
+            {notification.fromUser.username}
+          </Text>{" "}
           {notification.message}
         </Text>
         <Text style={styles.rowTime}>{timeAgo(notification.createdAt)}</Text>
@@ -48,18 +48,18 @@ function NotificationRow({
 }
 
 export default function NotificationsScreen() {
-  const router = useRouter();
-  const { items, loading, fetch, markRead, markAllRead, unreadCount } = useNotificationsStore();
+  // const router = useRouter();
+  // const { items, loading, fetch, markRead, markAllRead, unreadCount } = useNotificationsStore();
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+  // useEffect(() => {
+  //   fetch();
+  // }, [fetch]);
 
-  function handlePress(notification: AppNotification) {
-    if (!notification.read) markRead(notification.id);
-    router.push({ pathname: "/(tabs)/feed", params: { highlightPostId: notification.postId } });
-  }
-
+  // function handlePress(notification: AppNotification) {
+  //   if (!notification.read) markRead(notification.id);
+  //   router.push({ pathname: "/(tabs)/feed", params: { highlightPostId: notification.postId } });
+  // }
+  return <View> Coming soon</View>;
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.header}>
@@ -75,16 +75,25 @@ export default function NotificationsScreen() {
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <NotificationRow notification={item} onPress={() => handlePress(item)} />
+          <NotificationRow
+            notification={item}
+            onPress={() => handlePress(item)}
+          />
         )}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetch} />}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetch} />
+        }
         contentContainerStyle={items.length === 0 && styles.emptyContent}
         ListEmptyComponent={
           loading ? (
             <ActivityIndicator color="#4f46e5" style={{ marginTop: 40 }} />
           ) : (
             <View style={styles.centered}>
-              <Ionicons name="notifications-outline" size={36} color="#d1d5db" />
+              <Ionicons
+                name="notifications-outline"
+                size={36}
+                color="#d1d5db"
+              />
               <Text style={styles.emptyText}>No notifications yet</Text>
             </View>
           )
@@ -121,8 +130,20 @@ const styles = StyleSheet.create({
   rowText: { fontSize: 14, color: "#374151" },
   rowUsername: { fontWeight: "700", color: "#111827" },
   rowTime: { fontSize: 12, color: "#9ca3af", marginTop: 2 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#4f46e5", marginLeft: 8 },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#4f46e5",
+    marginLeft: 8,
+  },
   emptyContent: { flexGrow: 1 },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 8 },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    gap: 8,
+  },
   emptyText: { color: "#9ca3af", fontSize: 14 },
 });

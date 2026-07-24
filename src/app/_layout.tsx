@@ -4,20 +4,8 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useNotificationsPoller } from "@/hooks/useNotificationsPoller";
 import { useAuthStore } from "@/store/auth.store";
-
-// 1. Create QueryClient Instance
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 60 * 24, 
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { queryClient } from "@/lib/query-client";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -40,7 +28,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isHydrated, segments, router]);
 
-  useNotificationsPoller();
 
   if (!isHydrated) {
     return (

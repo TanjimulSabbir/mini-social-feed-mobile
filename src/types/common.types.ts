@@ -12,7 +12,6 @@ export interface ApiResponse<T> {
   meta?: Meta;
 }
 
-// Mirrors backend's TGenericErrorResponse — shape of err.response.data on failure
 export interface GenericErrorResponse {
   statusCode: number | string;
   message: string;
