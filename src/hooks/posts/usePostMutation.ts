@@ -40,6 +40,22 @@ export function useDeletePost() {
   });
 }
 
+function patchPostInCache(oldData: any, postId: string, transform: (p: Post) => Post) {
+  if (!oldData) return oldData;
+  if (Array.isArray(oldData)) {
+    return oldData.map((p: Post) => (p.id === postId ? transform(p) : p));
+  }
+  if (oldData.pages) {
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page: any) => ({
+        ...page,
+        posts: page.posts.map((p: Post) => (p.id === postId ? transform(p) : p)),
+      })),
+    };
+  }
+  return oldData;
+}
 export function useToggleLike() {
   const queryClient = useQueryClient();
 
@@ -47,24 +63,24 @@ export function useToggleLike() {
     mutationFn: (postId: string) => likeApi.toggleLike({ postId }),
 
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: postKeys.list() });
-      const previousPosts = queryClient.getQueryData<Post[]>(postKeys.list());
+      await queryClient.cancelQueries({ queryKey: postKeys.all });
+      const previous = queryClient.getQueriesData({ queryKey: postKeys.all });
 
-      queryClient.setQueryData<Post[]>(postKeys.list(), (old) =>
-        old?.map((p) => (p.id === postId ? { ...p, isLiked: !p.isLiked } : p))
+      queryClient.setQueriesData({ queryKey: postKeys.all }, (old) =>
+        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLiked }))
       );
 
-      return { previousPosts };
+      return { previous };
     },
 
     onError: (_err, _postId, context) => {
-      if (context?.previousPosts) {
-        queryClient.setQueryData(postKeys.list(), context.previousPosts);
-      }
+      context?.previous?.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data);
+      });
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 }

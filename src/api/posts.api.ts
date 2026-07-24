@@ -1,15 +1,26 @@
-import { apiClient } from '@/api/client';
-import { ApiResponse } from '@/types/auth.types';
-import { CreatePostPayload, Post, PostStats, UpdatePostPayload } from '@/types/post.types';
+import { apiClient } from "@/api/client";
+import { ApiResponse, Meta } from "@/types/common.types";
+import {
+  CreatePostPayload,
+  Post,
+  PostStats,
+  UpdatePostPayload,
+} from "@/types/post.types";
 
 export const postApi = {
-  async getAllPosts(): Promise<Post[]> {
-    const { data } = await apiClient.get<ApiResponse<Post[]>>('/posts');
-    return data.data;
+  async getAllPosts(params: { page?: number; limit?: number } = {}): Promise<{
+    posts: Post[];
+    meta?: Meta;
+  }> {
+    const { data } = await apiClient.get<ApiResponse<Post[]>>("/posts", {
+      params,
+    });
+    return { posts: data.data, meta: data.meta };
   },
 
   async getMyPosts(): Promise<Post[]> {
-    const { data } = await apiClient.get<ApiResponse<Post[]>>('/posts/my-posts');
+    const { data } =
+      await apiClient.get<ApiResponse<Post[]>>("/posts/my-posts");
     return data.data;
   },
 
@@ -19,12 +30,15 @@ export const postApi = {
   },
 
   async createPost(payload: CreatePostPayload): Promise<Post> {
-    const { data } = await apiClient.post<ApiResponse<Post>>('/posts', payload);
+    const { data } = await apiClient.post<ApiResponse<Post>>("/posts", payload);
     return data.data;
   },
 
   async updatePost(postId: string, payload: UpdatePostPayload): Promise<Post> {
-    const { data } = await apiClient.patch<ApiResponse<Post>>(`/posts/${postId}`, payload);
+    const { data } = await apiClient.patch<ApiResponse<Post>>(
+      `/posts/${postId}`,
+      payload,
+    );
     return data.data;
   },
 

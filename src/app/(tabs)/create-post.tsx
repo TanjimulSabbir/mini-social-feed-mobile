@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,11 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { postApi } from "@/api/posts.api";
-import { getErrorMessage } from "@/utils/error.utils";
 import { PostCreateStyles as styles } from "@/styles/post.create.styles";
+import { getErrorMessage } from "@/utils/error.utils";
 
-const MAX_CONTENT_LENGTH = 280;
-const MAX_TITLE_LENGTH = 255; // matches Post.title @db.VarChar(255)
+const MAX_CONTENT_LENGTH = 1080;
+const MAX_TITLE_LENGTH = 255;
 
 export default function CreatePostScreen() {
   const router = useRouter();
@@ -27,6 +27,8 @@ export default function CreatePostScreen() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
+  const [isContentFocused, setIsContentFocused] = useState(false);
 
   const createPostMutation = useMutation({
     mutationFn: (payload: { title: string; content: string }) =>
@@ -35,7 +37,7 @@ export default function CreatePostScreen() {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       setTitle("");
       setContent("");
-      router.push("/(tabs)/feed");
+      router.push("/");
     },
     onError: (err) => {
       setError(getErrorMessage(err));
@@ -67,6 +69,7 @@ export default function CreatePostScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.container}>
+          {/* Header Bar */}
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.closeBtn}
@@ -81,11 +84,15 @@ export default function CreatePostScreen() {
             <TouchableOpacity
               style={[
                 styles.publishBtn,
-                (!title.trim() || !content.trim() || createPostMutation.isPending) &&
+                (!title.trim() ||
+                  !content.trim() ||
+                  createPostMutation.isPending) &&
                   styles.btnDisabled,
               ]}
               onPress={handleSubmit}
-              disabled={!title.trim() || !content.trim() || createPostMutation.isPending}
+              disabled={
+                !title.trim() || !content.trim() || createPostMutation.isPending
+              }
               activeOpacity={0.8}
             >
               {createPostMutation.isPending ? (
@@ -96,41 +103,59 @@ export default function CreatePostScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Form Card */}
           <View style={styles.card}>
             {error && (
               <View style={styles.bannerError}>
-                <Ionicons name="alert-circle-outline" size={16} color="#F87171" />
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={16}
+                  color="#F87171"
+                />
                 <Text style={styles.bannerErrorText}>{error}</Text>
               </View>
             )}
 
+            {/* Title Input */}
             <TextInput
-              style={styles.textarea}
-              placeholder="Title"
+              style={[
+                styles.titleInput,
+                isTitleFocused && styles.titleInputFocused,
+              ]}
+              placeholder="Title your post..."
               placeholderTextColor="#64748B"
               value={title}
-              onChangeText={(val) => {
-                setTitle(val);
-                if (error) setError(null);
-              }}
+              onChangeText={setTitle}
+              onFocus={() => setIsTitleFocused(true)}
+              onBlur={() => setIsTitleFocused(false)}
               maxLength={MAX_TITLE_LENGTH}
             />
 
-            <TextInput
-              style={styles.textarea}
-              placeholder="What's happening?"
-              placeholderTextColor="#64748B"
-              value={content}
-              onChangeText={(val) => {
-                setContent(val);
-                if (error) setError(null);
-              }}
-              maxLength={MAX_CONTENT_LENGTH}
-              multiline
-            />
+            {/* Content Body Input */}
+            <View
+              style={[
+                styles.contentInputContainer,
+                isContentFocused && styles.contentInputContainerFocused,
+              ]}
+            >
+              <TextInput
+                style={styles.contentInput}
+                placeholder="What's on your mind?"
+                placeholderTextColor="#64748B"
+                value={content}
+                onChangeText={setContent}
+                onFocus={() => setIsContentFocused(true)}
+                onBlur={() => setIsContentFocused(false)}
+                maxLength={MAX_CONTENT_LENGTH}
+                multiline
+              />
+            </View>
 
+            {/* Card Footer Info */}
             <View style={styles.cardFooter}>
-              <Ionicons name="sparkles-outline" size={18} color="#A3E635" />
+              <View style={styles.charCountGroup}>
+                <Ionicons name="sparkles-outline" size={16} color="#A3E635" />
+              </View>
               <Text
                 style={[
                   styles.charCountText,

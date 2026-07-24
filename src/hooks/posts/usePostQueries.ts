@@ -5,7 +5,6 @@ import { postApi } from "@/api/posts.api";
 export function useAllPosts() {
   return useQuery({
     queryKey: postKeys.list(),
-    queryFn: postApi.getAllPosts,
   });
 }
 

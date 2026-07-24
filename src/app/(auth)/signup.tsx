@@ -76,7 +76,7 @@ export default function SignupScreen() {
 
 
   const formError = signupMutation.isError
-    ? signupMutation.error instanceof ApiError
+    ? signupMutation.error instanceof Error
       ? signupMutation.error.message
       : "Signup failed. Please try again."
     : null;

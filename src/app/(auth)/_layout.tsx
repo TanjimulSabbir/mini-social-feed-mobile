@@ -1,11 +1,12 @@
-import { Stack } from "expo-router";
-import React from "react";
+import { Redirect, Slot } from 'expo-router';
+import { useAuthStore } from '@/store/auth.store';
 
 export default function AuthLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="signup" />
-    </Stack>
-  );
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  return <Slot />;
 }

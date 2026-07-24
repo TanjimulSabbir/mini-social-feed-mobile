@@ -6,6 +6,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useAuthStore } from "@/store/auth.store";
 import { queryClient } from "@/lib/query-client";
+import { StatusBar } from "expo-status-bar";
+import { Slot } from "expo-router";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -24,10 +26,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)/feed");
+      router.replace("/(tabs)");
     }
   }, [isAuthenticated, isHydrated, segments, router]);
-
 
   if (!isHydrated) {
     return (
@@ -52,16 +53,8 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthGate>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "#071A1B" },
-            }}
-          >
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
+          <StatusBar style="auto" />
+          <Slot />
         </AuthGate>
       </QueryClientProvider>
     </SafeAreaProvider>

@@ -8,7 +8,8 @@ import { storageService } from "@/services/storage.services";
 interface AuthState {
   user: DecodedUser | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  isHydrated: boolean;
+
   login: (payload: LoginPayload) => Promise<void>;
   signup: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,7 +19,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isHydrated: false,
 
   login: async (payload) => {
     const tokens = await authApi.login(payload);
@@ -37,19 +38,35 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: async () => {
-    const token = await storageService.getAccessToken();
-    if (token) {
-      try {
+    try {
+      const token = await storageService.getAccessToken();
+
+      if (token) {
         const user = jwtDecode<DecodedUser>(token);
-        // exp is in seconds, Date.now() in ms
+
         if (user.exp * 1000 > Date.now()) {
-          set({ user, isAuthenticated: true, isLoading: false });
+          set({
+            user,
+            isAuthenticated: true,
+            isHydrated: true,
+          });
           return;
         }
-      } catch {
-        // fall through to cleared state below
       }
+
+      set({
+        user: null,
+        isAuthenticated: false,
+        isHydrated: true,
+      });
+    } catch (error) {
+      console.log("Hydration failed:", error);
+
+      set({
+        user: null,
+        isAuthenticated: false,
+        isHydrated: true,
+      });
     }
-    set({ user: null, isAuthenticated: false, isLoading: false });
   },
 }));

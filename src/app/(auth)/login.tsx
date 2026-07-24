@@ -12,7 +12,6 @@ import {
   View
 } from "react-native";
 
-import { ApiError } from "@/api/client";
 import { useAuthStore } from "@/store/auth.store";
 import { LoginFormStyles } from "@/styles/login.style";
 import { loginSchema } from "@/schema/login.schema";
@@ -59,7 +58,7 @@ export default function LoginScreen() {
       router.replace("/(tabs)/feed");
     } catch (err) {
       setFormError(
-        err instanceof ApiError
+        err instanceof Error
           ? err.message
           : "Login failed. Please try again.",
       );
