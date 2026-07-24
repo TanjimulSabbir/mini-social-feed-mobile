@@ -1,0 +1,21 @@
+export interface Meta {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: T;
+  meta?: Meta;
+}
+
+// Mirrors backend's TGenericErrorResponse — shape of err.response.data on failure
+export interface GenericErrorResponse {
+  statusCode: number | string;
+  message: string;
+  errorName: string;
+  errorInfo: Record<string, unknown>;
+}

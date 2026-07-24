@@ -1,20 +1,11 @@
-import { apiRequest } from "./client";
-import { AppNotification, PaginatedResponse } from "@/types/app.types";
+import { apiClient } from "@/api/client";
+import { ApiResponse } from "@/types/auth.types";
 
-
-export const notificationsApi = {
-  getNotifications: (page = 1) =>
-    apiRequest<PaginatedResponse<AppNotification>>("/notifications", {
-      query: { page },
-    }),
-
-  markRead: (notificationId: string) =>
-    apiRequest<void>(`/notifications/${notificationId}/read`, {
-      method: "POST",
-    }),
-
-  markAllRead: () =>
-    apiRequest<void>("/notifications/read-all", {
-      method: "POST",
-    }),
+export const notificationApi = {
+  async registerPushToken(payload: { fcmToken: string }): Promise<void> {
+    await apiClient.post<ApiResponse<unknown>>(
+      `/users/device/update-fcm-token`,
+      payload,
+    );
+  },
 };

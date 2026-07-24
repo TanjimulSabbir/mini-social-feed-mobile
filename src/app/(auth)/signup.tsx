@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 
-import { ApiError } from "@/api/client";
 import { SignupFormData, signupSchema } from "@/schema/signup.schema";
 import { useAuthStore } from "@/store/auth.store";
 import { SignupScreenStyles } from "@/styles/signup.style";
@@ -75,7 +74,7 @@ export default function SignupScreen() {
     });
   }
 
-  // Derive error message from TanStack Query state
+
   const formError = signupMutation.isError
     ? signupMutation.error instanceof ApiError
       ? signupMutation.error.message

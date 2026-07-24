@@ -1,10 +1,16 @@
+import { AuthorSummary } from './user.types';
+
+export type CommentStatus = 'APPROVED' | 'REJECT';
+
 export interface Comment {
   id: string;
-  postId: string;
-  authorId: string;
-  author?: { id: string; name: string };
   content: string;
+  authorId: string;
+  author?: AuthorSummary;
+  postId: string;
+  status: CommentStatus;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCommentPayload {

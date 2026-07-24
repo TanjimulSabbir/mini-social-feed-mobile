@@ -1,25 +1,29 @@
-export interface Author {
-  id: string;
-  name: string;
-  email: string;
-}
+import { AuthorSummary } from "./user.types";
+
+export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export interface Post {
   id: string;
   title: string;
   content: string;
-  authorId: string;
-  author?: Author;
-  likesCount: number;
-  commentsCount: number;
-  isLiked?: boolean;
+  thumbnail: string | null;
+  isFeatured: boolean;
+  status: PostStatus;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
+  authorId: string;
+  author?: AuthorSummary;
+
+  _count?: { likes: number; comments: number };
+  isLiked?: boolean;
 }
 
 export interface CreatePostPayload {
   title: string;
   content: string;
+  thumbnail?: string;
+  tags?: string[];
 }
 
 export type UpdatePostPayload = Partial<CreatePostPayload>;
