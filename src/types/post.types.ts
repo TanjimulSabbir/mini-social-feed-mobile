@@ -1,5 +1,4 @@
 import { AuthorSummary } from "./user.types";
-import { Comment } from "./comment.types";
 
 export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 

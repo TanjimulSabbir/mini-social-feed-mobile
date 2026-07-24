@@ -77,7 +77,7 @@ export function useToggleLike() {
       const previous = queryClient.getQueriesData({ queryKey: postKeys.all });
 
       queryClient.setQueriesData({ queryKey: postKeys.all }, (old) =>
-        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLiked })),
+        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLikedByMe })),
       );
 
       return { previous };

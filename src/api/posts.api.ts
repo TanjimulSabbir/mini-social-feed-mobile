@@ -3,8 +3,7 @@ import { ApiResponse, Meta } from "@/types/common.types";
 import {
   CreatePostPayload,
   Post,
-  PostStats,
-  UpdatePostPayload,
+  UpdatePostPayload
 } from "@/types/post.types";
 
 export const postApi = {

@@ -1,4 +1,5 @@
 import { syncPushTokenWithBackend } from "@/lib/push-notifications";
+import { useNotificationResponseListener } from "@/hooks/notifications/useNotificationResponseListener";
 import { useAuthStore } from "@/store/auth.store";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -22,6 +23,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     return () => sub.remove();
   }, [isHydrated, isAuthenticated]);
+
+  useNotificationResponseListener();
 
   if (!isHydrated) {
     return (

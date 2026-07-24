@@ -1,9 +1,7 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { notificationApi } from "@/api/notification.api";
-
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,15 +13,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function registerForPushNotificationsAsync(): Promise<
-  string | null
-> {
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (!Device.isDevice) {
     console.warn("Push notifications require a physical device");
     return null;
   }
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  const { status: existingStatus } =
+    await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
   if (existingStatus !== "granted") {
@@ -45,13 +42,10 @@ export async function registerForPushNotificationsAsync(): Promise<
     });
   }
 
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+  // Android: this is the real FCM registration token — matches firebase-admin.
+  // iOS: this returns the raw APNs token, NOT an FCM token — see notes above,
+  // this path needs @react-native-firebase/messaging before iOS will work.
   const tokenResponse = await Notifications.getDevicePushTokenAsync();
-
-  // Note: getDevicePushTokenAsync returns the native FCM/APNs token directly —
-  // this is what your backend's firebase-admin `getMessaging().send()` expects,
-  // NOT the Expo push token (getExpoPushTokenAsync), since your backend calls
-  // FCM directly rather than going through Expo's push service.
   return tokenResponse.data;
 }
 

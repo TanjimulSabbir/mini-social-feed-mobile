@@ -3,16 +3,14 @@ import { useState } from "react";
 import {
   Pressable,
   Text,
-  TextInput,
-  View,
-  ActivityIndicator,
+  View
 } from "react-native";
 
 import { postCardStyles as styles } from "@/styles/post.card.styles";
 import { Post } from "@/types/post.types";
 import { formatTimeAgo } from "@/utils/date"; // or your relative time utility
-import { CommentsModal } from "./comment-modal";
 import CommentInput from "./comment-input";
+import { CommentsModal } from "./comment-modal";
 
 interface PostCardProps {
   post: Post;
@@ -25,7 +23,6 @@ export function PostCard({
   post,
   highlighted,
   onToggleLike,
-  onSubmitComment,
 }: PostCardProps) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
