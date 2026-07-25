@@ -13,14 +13,15 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
+export async function registerForPushNotificationsAsync(): Promise<
+  string | null
+> {
   if (!Device.isDevice) {
     console.warn("Push notifications require a physical device");
     return null;
   }
 
-  const { status: existingStatus } =
-    await Notifications.getPermissionsAsync();
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
   if (existingStatus !== "granted") {
@@ -56,6 +57,6 @@ export async function syncPushTokenWithBackend() {
   try {
     await notificationApi.updateFcmToken(token);
   } catch (err) {
-    console.error("Failed to sync FCM token:", err);
+    console.error("Failed to sync FCM token:", JSON.stringify(err));
   }
 }

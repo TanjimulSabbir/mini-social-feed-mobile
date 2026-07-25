@@ -1,13 +1,19 @@
 import { apiClient } from "@/api/client";
 import { ApiResponse, Meta } from "@/types/common.types";
-import {
-  CreatePostPayload,
-  Post,
-  UpdatePostPayload
-} from "@/types/post.types";
+import { CreatePostPayload, Post, UpdatePostPayload } from "@/types/post.types";
+
+interface GetAllPostsParams {
+  page: number;
+  limit: number;
+  searchTerm?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  title?: string;
+  content?: string;
+}
 
 export const postApi = {
-  async getAllPosts(params: { page?: number; limit?: number } = {}): Promise<{
+  async getAllPosts(params: GetAllPostsParams): Promise<{
     posts: Post[];
     meta?: Meta;
   }> {

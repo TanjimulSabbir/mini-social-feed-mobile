@@ -28,17 +28,17 @@ export default function CommentInput({
   function handleSubmitComment() {
     const content = value.trim();
     if (!content || createComment.isPending) return;
-    createComment.mutate({
-      postId,
-      content,
-    });
+    createComment.mutate({ postId, content });
     onChangeText("");
   }
 
   return (
     <View style={[styles.commentInputRow, isModal && styles.modalInputRow]}>
       <TextInput
-        style={[styles.commentInput,isFocused && GlobalStyles.commentInputFocused]}
+        style={[
+          styles.commentInput,
+          isFocused && GlobalStyles.commentInputFocused,
+        ]}
         placeholder={placeholder}
         placeholderTextColor="#64748B"
         value={value}

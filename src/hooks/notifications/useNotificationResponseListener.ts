@@ -6,7 +6,6 @@ export function useNotificationResponseListener() {
   const router = useRouter();
 
   useEffect(() => {
-    // App was backgrounded/killed, user tapped a notification
     const responseSub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const data = response.notification.request.content.data as {
