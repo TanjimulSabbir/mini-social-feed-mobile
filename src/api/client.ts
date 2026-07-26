@@ -4,6 +4,12 @@ import { AuthTokens } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
 import { ApiResponse } from "@/types/common.types";
 
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipAuthRefresh?: boolean;
+  }
+}
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -26,7 +32,11 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.skipAuthRefresh
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -46,6 +56,7 @@ apiClient.interceptors.response.use(
         const { data } = await refreshClient.post<ApiResponse<AuthTokens>>(
           "/auth/refresh-token",
           { refreshToken },
+          { skipAuthRefresh: true },
         );
 
         await storageService.saveTokens(data.data);

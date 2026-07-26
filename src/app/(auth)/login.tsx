@@ -12,15 +12,15 @@ import {
   View,
 } from "react-native";
 
-import { useAuthStore } from "@/store/auth.store";
-import { LoginFormStyles } from "@/styles/login.style";
+import { useLogin } from "@/hooks/useAuthMutations";
 import { loginSchema } from "@/schema/login.schema";
+import { LoginFormStyles } from "@/styles/login.style";
+import Toast from "react-native-toast-message";
 import { validateForm } from "@/utils/validate.form";
-import { getErrorMessage } from "@/utils/error.utils";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
+  const loginMutation = useLogin();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,37 +28,22 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit() {
-    const result = validateForm(loginSchema, {
-      email: email.trim(),
-      password,
-    });
-
-    if (!result.valid) {
-      setErrors({
-        email: result.errors.email,
-        password: result.errors.password,
-      });
-      return;
-    }
-
-    setErrors({});
-    setFormError(null);
-    setSubmitting(true);
-
-    try {
-      await login(result.data);
-
-      router.replace("/(tabs)");
-    } catch (err) {
-      console.log(err);
-      setFormError(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
+  function handleSubmit() {
+    const validate = validateForm(loginSchema, { email, password });
+    if (!validate.valid) setErrors(validate.errors);
+    loginMutation.mutate(
+      { email: email.trim(), password },
+      {
+        onSuccess: () => {
+          Toast.show({
+            type: "success",
+            text1: "Login successful!",
+          });
+          router.replace("/(tabs)");
+        },
+      },
+    );
   }
 
   return (
@@ -82,18 +67,10 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Card Form Container - Pure style, no Tailwind */}
         <View style={LoginFormStyles.card}>
-          {formError && (
-            <View style={LoginFormStyles.bannerError}>
-              <Ionicons name="alert-circle-outline" size={18} color="#F87171" />
-              <Text style={LoginFormStyles.bannerErrorText}>{formError}</Text>
-            </View>
-          )}
-
           {/* Email Field */}
           <View style={LoginFormStyles.fieldGroup}>
-            <Text style={LoginFormStyles.label}>TRANSACTION EMAIL</Text>
+            <Text style={LoginFormStyles.label}>EMAIL</Text>
             <View
               style={[
                 LoginFormStyles.inputWrapper,
@@ -108,7 +85,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={LoginFormStyles.input}
-                placeholder="broker@yaytrack.com"
+                placeholder="you@example.com"
                 placeholderTextColor="#64748B"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -126,7 +103,7 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {/* Password Field */}
+          {/* Password Field — now a sibling, not nested inside the email fieldGroup */}
           <View style={LoginFormStyles.fieldGroup}>
             <Text style={LoginFormStyles.label}>PASSWORD</Text>
             <View
@@ -171,17 +148,17 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {/* Submit Button - Now uses the Lime-Green Accent */}
+          {/* Submit Button */}
           <TouchableOpacity
             style={[
               LoginFormStyles.submitBtn,
-              submitting && LoginFormStyles.btnDisabled,
+              loginMutation.isPending && LoginFormStyles.btnDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={submitting}
+            disabled={loginMutation.isPending}
             activeOpacity={0.8}
           >
-            {submitting ? (
+            {loginMutation.isPending ? (
               <ActivityIndicator color="#0A1C1C" size="small" />
             ) : (
               <Text style={LoginFormStyles.submitBtnText}>Log in</Text>

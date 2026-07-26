@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { commentApi } from "@/api/comment.api";
 import { commentKeys, postKeys } from "@/api/query-keys";
 import { CreateCommentPayload } from "@/types/comment.types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchPostInCache } from "./posts/usePostMutation";
 
 export function useCreateComment() {
@@ -24,9 +24,6 @@ export function useCreateComment() {
           },
         })),
       );
-    },
-    onError: (err) => {
-      console.error("createComment failed:", err);
     },
   });
 }

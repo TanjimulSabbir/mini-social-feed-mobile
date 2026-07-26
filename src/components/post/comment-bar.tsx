@@ -7,13 +7,10 @@ import {
   View,
 } from "react-native";
 
-import { postCardStyles as styles } from "@/styles/post.card.styles";
-import GlobalStyles from "@/styles/global.styles";
 import { useCreateComment } from "@/hooks/useCommentMutations";
+import GlobalStyles from "@/styles/global.styles";
+import { postCardStyles as styles } from "@/styles/post.card.styles";
 import { useState } from "react";
-import { get } from "react-native/Libraries/NativeComponent/NativeComponentRegistry";
-import { getErrorMessage, showBackendError } from "@/utils/error.utils";
-import axios, { AxiosError } from "axios";
 
 interface CommentInputProps {
   value: string;
@@ -58,17 +55,7 @@ export default function CommentInput({
           showFeedback("Comment posted!", "success");
         },
         onError: (err) => {
-          showBackendError(err);
-          console.log("instanceof check:", err instanceof AxiosError); // likely false
-          console.log("isAxiosError check:", axios.isAxiosError(err)); // likely true
-          console.log("raw data:", err?.response?.data);
-          if (axios.isAxiosError(err)) {
-            console.log(
-              "issues:",
-              JSON.stringify(err.response?.data?.errorInfo?.issues, null, 2),
-            );
-          }
-        },
+        }
       },
     );
   }

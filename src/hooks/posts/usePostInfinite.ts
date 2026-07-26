@@ -1,9 +1,8 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { postKeys } from "@/api/query-keys";
 import { postApi } from "@/api/posts.api";
 
 const PAGE_LIMIT = 10;
-
 
 export function usePostsInfinite(searchTerm: string = "") {
   return useInfiniteQuery({
@@ -19,5 +18,6 @@ export function usePostsInfinite(searchTerm: string = "") {
       return undefined;
     },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
