@@ -30,13 +30,13 @@ export async function sendTokenToBackend(deviceToken: string) {
     const accessToken = await storageService.getAccessToken();
     if (accessToken) {
       const user = jwtDecode<DecodedUser>(accessToken);
+      console.log(user,"user")
       backendToken = user.fcmToken ?? null;
     }
   } catch (error) {
     console.warn("Failed to decode access token.");
   }
 
-  // Backend already has the latest token
   if (backendToken === deviceToken) {
     lastSyncedToken = deviceToken;
     return;
@@ -44,10 +44,10 @@ export async function sendTokenToBackend(deviceToken: string) {
 
   try {
     await notificationApi.updateFcmToken(deviceToken);
-
     lastSyncedToken = deviceToken;
-
-    console.log("✅ FCM token synced successfully");
+    if (__DEV__) {
+      console.log("FCM token synced successfully");
+    }
   } catch (err: any) {
     console.error(
       "Failed to sync FCM token",
@@ -90,6 +90,7 @@ export async function registerForPushNotificationsAsync(): Promise<
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#A3E635",
     });

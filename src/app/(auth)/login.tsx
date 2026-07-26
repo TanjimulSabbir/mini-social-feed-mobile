@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -13,19 +13,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Toast from "react-native-toast-message";
 import { z } from "zod";
 
 import { FormInput } from "@/components/form/FormInput";
 import { useLogin } from "@/hooks/useAuthMutations";
 import { loginSchema } from "@/schema/login.schema";
 import { LoginFormStyles } from "@/styles/login.style";
-import { pushModal } from "@/hooks/modal";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
-  const router = useRouter();
   const loginMutation = useLogin();
   const passwordRef = useRef<TextInput>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,24 +37,8 @@ export default function LoginScreen() {
     mode: "onSubmit",
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(
-      { email: data.email.trim(), password: data.password },
-      {
-        onSuccess: () => {
-          Toast.show({ type: "success", text1: "Login successful!" });
-          router.replace("/(tabs)");
-        },
-        onError: (err: any) => {
-          Toast.show({
-            type: "error",
-            text1: "Login failed",
-            text2:
-              err?.message ?? "Please check your credentials and try again.",
-          });
-        },
-      },
-    );
+  const onSubmit = async (data: LoginFormValues) => {
+    loginMutation.mutate({ email: data.email.trim(), password: data.password });
   };
 
   const busy = isSubmitting || loginMutation.isPending;

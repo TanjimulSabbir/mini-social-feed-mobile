@@ -19,6 +19,7 @@ import { COLORS } from "@/constants/theme";
 import { generateRandomPost } from "@/data/generate.post";
 import { PostCreateStyles as styles } from "@/styles/post.create.styles";
 import { getErrorMessage } from "@/utils/error.utils";
+import { pushModal } from "@/hooks/modal";
 
 const MAX_TITLE_LENGTH = 255;
 const MAX_CONTENT_LENGTH = 5000;
@@ -40,6 +41,7 @@ export default function CreatePostScreen() {
     mutationFn: (payload: { title: string; content: string }) =>
       postApi.createPost(payload),
     onSuccess: () => {
+      pushModal("Post created successfully", 201);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       setTitle("");
       setContent("");

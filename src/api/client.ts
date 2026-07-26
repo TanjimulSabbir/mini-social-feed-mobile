@@ -4,7 +4,6 @@ import { AuthTokens } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
 import { ApiResponse } from "@/types/common.types";
 import { useAuthStore } from "@/store/auth.store";
-import { tokenService } from "@/services/token.service";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -19,7 +18,7 @@ export const apiClient = axios.create({
 const refreshClient = axios.create({ baseURL: API_BASE_URL });
 
 apiClient.interceptors.request.use(async (config) => {
-  const token = await tokenService.getAccessToken();
+  const token = await storageService.getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

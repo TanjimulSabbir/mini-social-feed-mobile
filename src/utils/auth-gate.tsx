@@ -29,9 +29,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     if (!hasSyncedRef.current) {
       hasSyncedRef.current = true;
-      syncPushTokenWithBackend().catch((err) => {
-        console.warn("Push token sync failed:", err);
-      });
+      syncPushTokenWithBackend();
     }
 
     const sub = Notifications.addPushTokenListener((event) => {

@@ -115,7 +115,7 @@ export default function NotificationsScreen() {
           ) : (
             <View style={styles.centered}>
               <View style={styles.emptyIconBadge}>
-                <Ionicons name="notifications-outline" size={30} color={COLORS.textMuted} />
+                <Ionicons name="notifications-outline" size={30} color={COLORS.active} />
               </View>
               <Text style={styles.emptyText}>No notifications yet</Text>
             </View>

@@ -43,7 +43,7 @@ export default function SignupScreen() {
       return await signup(data);
     },
     onSuccess: () => {
-        Toast.show({
+      Toast.show({
         type: "success",
         text1: "Account created!",
         text2: "Welcome to MiniSocial 🎉",
