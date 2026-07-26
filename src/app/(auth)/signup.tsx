@@ -19,6 +19,7 @@ import { FormInput } from "@/components/form/FormInput";
 import { SignupFormData, signupSchema } from "@/schema/signup.schema";
 import { useAuthStore } from "@/store/auth.store";
 import { SignupScreenStyles as styles } from "@/styles/signup.style";
+import Toast from "react-native-toast-message";
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -42,6 +43,11 @@ export default function SignupScreen() {
       return await signup(data);
     },
     onSuccess: () => {
+        Toast.show({
+        type: "success",
+        text1: "Account created!",
+        text2: "Welcome to MiniSocial 🎉",
+      });
       router.replace("/(tabs)");
     },
   });

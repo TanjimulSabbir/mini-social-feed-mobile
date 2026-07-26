@@ -1,8 +1,24 @@
+import { COLORS } from "@/constants/theme";
 import { StyleSheet } from "react-native";
 export const FeedStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#071A1B", // Deep dark teal
+  },
+   retryBtn: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.active,
+    backgroundColor: "transparent",
+  },
+  retryBtnText: {
+    color: COLORS.active,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   header: {
     flexDirection: "row",

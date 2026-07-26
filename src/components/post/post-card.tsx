@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
+import { COLORS } from "@/constants/theme";
 import { postCardStyles as styles } from "@/styles/post.card.styles";
 import { Post } from "@/types/post.types";
-import { formatTimeAgo } from "@/utils/date"; // or your relative time utility
+import { formatTimeAgo } from "@/utils/date";
 import CommentInput from "./comment-bar";
 import { CommentsModal } from "./comment-modal";
 
@@ -12,10 +13,9 @@ interface PostCardProps {
   post: Post;
   highlighted?: boolean;
   onToggleLike: (postId: string) => void;
-  onSubmitComment?: (postId: string, text: string) => Promise<void> | void;
 }
 
-export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
+function PostCardComponent({ post, highlighted, onToggleLike }: PostCardProps) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
 
@@ -27,69 +27,65 @@ export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
   return (
     <>
       <View style={[styles.card, highlighted && styles.cardHighlighted]}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {authorName.charAt(0).toUpperCase()}
-            </Text>
+            <Text style={styles.avatarText}>{authorName.charAt(0).toUpperCase()}</Text>
           </View>
 
           <View style={styles.headerInfo}>
-            <Text style={styles.authorName}>{authorName}</Text>
+            <Text style={styles.authorName} numberOfLines={1}>
+              {authorName}
+            </Text>
             <View style={styles.timeBadge}>
-              <Ionicons name="time-outline" size={12} color="#64748B" />
-              <Text style={styles.globalTimeText}>
-                {formatTimeAgo(post.createdAt)}
-              </Text>
+              <Ionicons name="time-outline" size={12} color={COLORS.inactive} />
+              <Text style={styles.globalTimeText}>{formatTimeAgo(post.createdAt)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Title & Body */}
-        {post.title && <Text style={styles.titleText}>{post.title}</Text>}
-        <Text style={styles.content}>{post.content}</Text>
+        {post.title && (
+          <Text style={styles.titleText} numberOfLines={3}>
+            {post.title}
+          </Text>
+        )}
+        <Text style={styles.content} numberOfLines={12}>
+          {post.content}
+        </Text>
 
-        {/* Actions */}
         <View style={styles.actions}>
-          {/* Like Button */}
           <Pressable
             style={[styles.actionBtn, isLikedByMe && styles.actionBtnActive]}
             onPress={() => onToggleLike(post.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={isLikedByMe ? "Unlike post" : "Like post"}
+            accessibilityState={{ selected: isLikedByMe }}
           >
             <Ionicons
               name={isLikedByMe ? "heart" : "heart-outline"}
               size={18}
-              color={isLikedByMe ? "#A3E635" : "#94A3B8"}
+              color={isLikedByMe ? COLORS.active : COLORS.inactive}
             />
-            <Text
-              style={[
-                styles.actionText,
-                isLikedByMe && styles.actionTextActive,
-              ]}
-            >
+            <Text style={[styles.actionText, isLikedByMe && styles.actionTextActive]}>
               {likesCount}
             </Text>
           </Pressable>
 
-          {/* Comment Count Button (Opens Modal) */}
           <Pressable
             style={styles.actionBtn}
             onPress={() => setIsCommentsOpen(true)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={`View ${commentsCount} comments`}
           >
-            <Ionicons name="chatbubble-outline" size={17} color="#94A3B8" />
+            <Ionicons name="chatbubble-outline" size={17} color={COLORS.inactive} />
             <Text style={styles.actionText}>{commentsCount}</Text>
           </Pressable>
         </View>
 
-        <CommentInput
-          value={commentText}
-          onChangeText={setCommentText}
-          postId={post.id}
-        />
+        <CommentInput value={commentText} onChangeText={setCommentText} postId={post.id} />
       </View>
 
-      {/* Full Comments Modal */}
       <CommentsModal
         visible={isCommentsOpen}
         postId={post.id}
@@ -98,3 +94,15 @@ export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
     </>
   );
 }
+
+// The Feed's FlatList re-renders on every keystroke in the search bar (parent
+// state change). Without memo, every visible PostCard re-renders too, even
+// though its own `post` prop hasn't changed. This is the single biggest
+// perf fix available here for free.
+export const PostCard = memo(PostCardComponent, (prev, next) => {
+  return (
+    prev.post === next.post &&
+    prev.highlighted === next.highlighted &&
+    prev.onToggleLike === next.onToggleLike
+  );
+});

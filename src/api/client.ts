@@ -3,6 +3,8 @@ import { API_BASE_URL } from "@/constants/config";
 import { AuthTokens } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
 import { ApiResponse } from "@/types/common.types";
+import { useAuthStore } from "@/store/auth.store";
+import { tokenService } from "@/services/token.service";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -17,7 +19,7 @@ export const apiClient = axios.create({
 const refreshClient = axios.create({ baseURL: API_BASE_URL });
 
 apiClient.interceptors.request.use(async (config) => {
-  const token = await storageService.getAccessToken();
+  const token = await tokenService.getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,7 +27,23 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 let isRefreshing = false;
-let pendingQueue: Array<(token: string) => void> = [];
+
+type QueueEntry = {
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+};
+let pendingQueue: QueueEntry[] = [];
+
+function flushQueue(error: unknown, token: string | null) {
+  pendingQueue.forEach(({ resolve, reject }) => {
+    if (error || !token) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  pendingQueue = [];
+}
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -40,10 +58,13 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          pendingQueue.push((newToken: string) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(apiClient(originalRequest));
+        return new Promise((resolve, reject) => {
+          pendingQueue.push({
+            resolve: (newToken: string) => {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(apiClient(originalRequest));
+            },
+            reject,
           });
         });
       }
@@ -60,14 +81,15 @@ apiClient.interceptors.response.use(
         );
 
         await storageService.saveTokens(data.data);
-        pendingQueue.forEach((cb) => cb(data.data.accessToken));
-        pendingQueue = [];
+        flushQueue(null, data.data.accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         await storageService.clearTokens();
-        pendingQueue = [];
+        flushQueue(refreshError, null);
+
+        useAuthStore.getState().logout?.();
 
         return Promise.reject(refreshError);
       } finally {

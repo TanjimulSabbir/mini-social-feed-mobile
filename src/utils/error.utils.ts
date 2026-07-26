@@ -1,4 +1,3 @@
-// utils/error.utils.ts
 import axios from "axios";
 import { GenericErrorResponse } from "@/types/common.types";
 

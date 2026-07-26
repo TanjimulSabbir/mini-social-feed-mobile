@@ -1,17 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useMemo } from "react";
+import { ActivityIndicator, Alert, FlatList, ListRenderItem, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { NotificationRow } from "@/components/norifications/notification-row";
+import { COLORS } from "@/constants/theme";
 import {
   useMarkAllAsRead,
   useMarkAsRead,
@@ -20,44 +15,8 @@ import {
   flattenNotifications,
   useNotificationsInfinite,
 } from "@/hooks/notifications/userNotificationInfinite";
-import { formatTimeAgo } from "@/utils/date";
-import { StatusBar } from "expo-status-bar";
-
-function NotificationRow({
-  notification,
-  onPress,
-}: {
-  notification: any;
-  onPress: () => void;
-}) {
-  const isLike = notification.type === "LIKE";
-  return (
-    <TouchableOpacity
-      style={[styles.row, !notification.isRead && styles.rowUnread]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Ionicons
-        name={isLike ? "heart" : "chatbubble"}
-        size={20}
-        color={isLike ? "#ef4444" : "#4f46e5"}
-        style={styles.rowIcon}
-      />
-      <View style={styles.rowBody}>
-        <Text style={styles.rowText}>
-          <Text style={styles.rowUsername}>
-            {notification.actor?.name ?? "Someone"}
-          </Text>{" "}
-          {isLike ? "liked your post" : "commented on your post"}
-        </Text>
-        <Text style={styles.rowTime}>
-          {formatTimeAgo(notification.createdAt)}
-        </Text>
-      </View>
-      {!notification.isRead && <View style={styles.dot} />}
-    </TouchableOpacity>
-  );
-}
+import { notificationsStyles as styles } from "@/styles/notification.style";
+import { Notification } from "@/types/notification.types";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -74,31 +33,58 @@ export default function NotificationsScreen() {
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
 
-  const notifications = useMemo(
-    () => flattenNotifications(data?.pages),
-    [data],
-  );
-
+  const notifications = useMemo(() => flattenNotifications(data?.pages), [data]);
   const unreadCount = data?.pages?.[0]?.unreadCount ?? 0;
 
-  function handlePress(notification: any) {
-    if (!notification.isRead) markAsRead.mutate(notification.id);
-    if (notification.postId) {
-      router.push({
-        pathname: "/",
-        params: { highlightPostId: notification.postId },
-      });
-    }
-  }
+  const handlePress = useCallback(
+    (notification: Notification) => {
+      if (!notification.isRead) {
+        markAsRead.mutate(notification.id, {
+          onError: () => {
+          },
+        });
+      }
+      if (notification.postId) {
+        router.push({
+          pathname: "/",
+          params: { highlightPostId: notification.postId },
+        });
+      }
+    },
+    [markAsRead, router],
+  );
+
+  const handleMarkAllRead = useCallback(() => {
+    markAllAsRead.mutate(undefined, {
+      onError: () => {
+        Alert.alert("Couldn't mark all as read", "Please try again.");
+      },
+    });
+  }, [markAllAsRead]);
+
+  const renderItem: ListRenderItem<Notification> = useCallback(
+    ({ item }) => <NotificationRow notification={item} onPress={() => handlePress(item)} />,
+    [handlePress],
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
+
       <View style={styles.header}>
         <Text style={styles.title}>Notifications</Text>
         {unreadCount > 0 && (
-          <TouchableOpacity onPress={() => markAllAsRead.mutate()}>
-            <Text style={styles.markAllText}>Mark all read</Text>
+          <TouchableOpacity
+            onPress={handleMarkAllRead}
+            disabled={markAllAsRead.isPending}
+            accessibilityRole="button"
+            accessibilityLabel="Mark all notifications as read"
+          >
+            {markAllAsRead.isPending ? (
+              <ActivityIndicator size="small" color={COLORS.active} />
+            ) : (
+              <Text style={styles.markAllText}>Mark all read</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
@@ -106,87 +92,41 @@ export default function NotificationsScreen() {
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <NotificationRow
-            notification={item}
-            onPress={() => handlePress(item)}
-          />
-        )}
+        renderItem={renderItem}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={COLORS.active}
+            colors={[COLORS.active]}
+          />
         }
         onEndReachedThreshold={0.4}
         onEndReached={() => {
           if (hasNextPage && !isFetchingNextPage) fetchNextPage();
         }}
-        contentContainerStyle={
-          notifications.length === 0 ? styles.emptyContent : undefined
-        }
+        contentContainerStyle={notifications.length === 0 ? styles.emptyContent : undefined}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={7}
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color="#4f46e5" style={{ marginTop: 40 }} />
+            <ActivityIndicator color={COLORS.active} style={{ marginTop: 40 }} />
           ) : (
             <View style={styles.centered}>
-              <Ionicons
-                name="notifications-outline"
-                size={36}
-                color="#d1d5db"
-              />
+              <View style={styles.emptyIconBadge}>
+                <Ionicons name="notifications-outline" size={30} color={COLORS.textMuted} />
+              </View>
               <Text style={styles.emptyText}>No notifications yet</Text>
             </View>
           )
         }
         ListFooterComponent={
           isFetchingNextPage ? (
-            <ActivityIndicator style={{ marginVertical: 16 }} />
+            <ActivityIndicator style={styles.footerLoader} color={COLORS.active} />
           ) : null
         }
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f2f4",
-  },
-  title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-  markAllText: { color: "#4f46e5", fontWeight: "600", fontSize: 13 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f9fafb",
-  },
-  rowUnread: { backgroundColor: "#f5f6ff" },
-  rowIcon: { marginRight: 12 },
-  rowBody: { flex: 1 },
-  rowText: { fontSize: 14, color: "#374151" },
-  rowUsername: { fontWeight: "700", color: "#111827" },
-  rowTime: { fontSize: 12, color: "#9ca3af", marginTop: 2 },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#4f46e5",
-    marginLeft: 8,
-  },
-  emptyContent: { flexGrow: 1 },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    gap: 8,
-  },
-  emptyText: { color: "#9ca3af", fontSize: 14 },
-});

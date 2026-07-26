@@ -5,26 +5,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useNotificationsInfinite } from "@/hooks/notifications/userNotificationInfinite";
 import { useAuthStore } from "@/store/auth.store";
-
-const COLORS = {
-  background: "#0A1C1C",
-  surface: "#0F2626",
-  border: "#1E3A3A",
-  active: "#A3E635",
-  inactive: "#64748B",
-  badge: "#F87171",
-};
+import { COLORS } from "@/constants/theme";
 
 export default function TabsLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isHydrated = useAuthStore((s) => s.isHydrated); // see note below
-  const { data } = useNotificationsInfinite();
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const { data } = useNotificationsInfinite({
+    enabled: isAuthenticated && isHydrated,
+  });
   const insets = useSafeAreaInsets();
 
   const unreadCount = data?.pages?.[0]?.unreadCount ?? 0;
 
   if (!isHydrated) {
-    return null; // or a splash/loading screen
+    return null;
   }
 
   if (!isAuthenticated) {
@@ -89,7 +83,8 @@ export default function TabsLayout() {
           name="notifications"
           options={{
             title: "Alerts",
-            tabBarBadge: unreadCount > 0 ? Math.min(unreadCount, 99) : undefined,
+            tabBarBadge:
+              unreadCount > 0 ? Math.min(unreadCount, 99) : undefined,
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons
                 name={focused ? "notifications" : "notifications-outline"}

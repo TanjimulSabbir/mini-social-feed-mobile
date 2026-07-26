@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { COLORS } from "@/constants/theme";
 import { useComments } from "@/hooks/useCommentQueries";
 import { postCardStyles as styles } from "@/styles/post.card.styles";
 import CommentInput from "./comment-bar";
@@ -26,7 +27,12 @@ export function CommentsModal({
   postId,
   onClose,
 }: CommentsModalProps) {
-  const { data: comments = [], isLoading } = useComments(postId, visible);
+  const {
+    data: comments = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useComments(postId, visible);
   const [commentText, setCommentText] = useState("");
 
   const commentsCount = comments.length;
@@ -47,24 +53,45 @@ export function CommentsModal({
           <Pressable
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close comments"
           >
-            <Ionicons name="close" size={22} color="#94A3B8" />
+            <Ionicons name="close" size={22} color={COLORS.inactive} />
           </Pressable>
         </View>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
           style={{ flex: 1 }}
         >
           <View style={{ flex: 1 }}>
-            <CommentList comments={comments} isLoading={isLoading} />
+            {isError ? (
+              <View style={styles.modalEmpty}>
+                <Text style={styles.modalEmptyText}>
+                  Could not load comments.
+                </Text>
+                <Pressable onPress={() => refetch()} accessibilityRole="button">
+                  <Text
+                    style={[
+                      styles.modalEmptyText,
+                      { color: COLORS.active, marginTop: 8 },
+                    ]}
+                  >
+                    Try again
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <CommentList comments={comments} isLoading={isLoading} />
+            )}
           </View>
 
           <CommentInput
             value={commentText}
             onChangeText={setCommentText}
             postId={postId}
-            isModal={true}
+            isModal
           />
         </KeyboardAvoidingView>
       </SafeAreaView>

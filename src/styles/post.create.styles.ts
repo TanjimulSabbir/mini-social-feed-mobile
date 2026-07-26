@@ -134,6 +134,7 @@ export const PostCreateStyles = StyleSheet.create({
     fontSize: 14,
     color: "#E2E8F0",
     lineHeight: 22,
+    textAlignVertical: "top",
   },
   cardFooter: {
     flexDirection: "row",

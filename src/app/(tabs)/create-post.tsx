@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,11 +15,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { postApi } from "@/api/posts.api";
+import { COLORS } from "@/constants/theme";
+import { generateRandomPost } from "@/data/generate.post";
 import { PostCreateStyles as styles } from "@/styles/post.create.styles";
 import { getErrorMessage } from "@/utils/error.utils";
-import { generateRandomPost } from "@/data/generate.post";
 
 const MAX_TITLE_LENGTH = 255;
+const MAX_CONTENT_LENGTH = 5000;
 
 export default function CreatePostScreen() {
   const router = useRouter();
@@ -29,6 +32,9 @@ export default function CreatePostScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isTitleFocused, setIsTitleFocused] = useState(false);
   const [isContentFocused, setIsContentFocused] = useState(false);
+
+  const hasUnsavedChanges =
+    title.trim().length > 0 || content.trim().length > 0;
 
   const createPostMutation = useMutation({
     mutationFn: (payload: { title: string; content: string }) =>
@@ -44,14 +50,38 @@ export default function CreatePostScreen() {
     },
   });
 
-  function handleGeneratePost() {
+  const isBusy = createPostMutation.isPending;
+
+  const handleClose = useCallback(() => {
+    if (isBusy) return;
+
+    if (!hasUnsavedChanges) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      "Discard post?",
+      "You have unsaved changes. If you leave now, they'll be lost.",
+      [
+        { text: "Keep editing", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => router.back(),
+        },
+      ],
+    );
+  }, [hasUnsavedChanges, isBusy, router]);
+
+  const handleGeneratePost = useCallback(() => {
     const generated = generateRandomPost(title);
     setTitle(generated.title);
     setContent(generated.content);
     if (error) setError(null);
-  }
+  }, [title, error]);
 
-  function handleSubmit() {
+  const handleSubmit = useCallback(() => {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
@@ -65,11 +95,10 @@ export default function CreatePostScreen() {
     }
     setError(null);
     createPostMutation.mutate({ title: trimmedTitle, content: trimmedContent });
-  }
+  }, [title, content, createPostMutation]);
 
   const contentLength = content.length;
-  const isPublishDisabled =
-    !title.trim() || !content.trim() || createPostMutation.isPending;
+  const isPublishDisabled = !title.trim() || !content.trim() || isBusy;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -78,17 +107,22 @@ export default function CreatePostScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.container}>
-          {/* Header Bar */}
           <View style={styles.header}>
             <Pressable
               style={({ pressed }) => [
                 styles.closeBtn,
                 pressed && styles.closeBtnPressed,
+                isBusy && styles.btnDisabled,
               ]}
-              onPress={() => router.back()}
+              onPress={handleClose}
+              disabled={isBusy}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                hasUnsavedChanges ? "Discard and close" : "Close"
+              }
             >
-              <Ionicons name="arrow-back" size={20} color="#CBD5E1" />
+              <Ionicons name="close" size={22} color={COLORS.text} />
             </Pressable>
 
             <View style={styles.headerTitleContainer}>
@@ -103,9 +137,11 @@ export default function CreatePostScreen() {
               ]}
               onPress={handleSubmit}
               disabled={isPublishDisabled}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isPublishDisabled, busy: isBusy }}
             >
-              {createPostMutation.isPending ? (
-                <ActivityIndicator size="small" color="#071A1B" />
+              {isBusy ? (
+                <ActivityIndicator size="small" color={COLORS.background} />
               ) : (
                 <View style={styles.publishBtnContent}>
                   <Text
@@ -119,7 +155,9 @@ export default function CreatePostScreen() {
                   <Ionicons
                     name="arrow-up"
                     size={14}
-                    color={isPublishDisabled ? "#64748B" : "#071A1B"}
+                    color={
+                      isPublishDisabled ? COLORS.inactive : COLORS.background
+                    }
                   />
                 </View>
               )}
@@ -128,11 +166,11 @@ export default function CreatePostScreen() {
 
           <View style={styles.card}>
             {error && (
-              <View style={styles.bannerError}>
+              <View style={styles.bannerError} accessibilityLiveRegion="polite">
                 <Ionicons
                   name="alert-circle-outline"
                   size={16}
-                  color="#F87171"
+                  color={COLORS.badge}
                 />
                 <Text style={styles.bannerErrorText}>{error}</Text>
               </View>
@@ -145,9 +183,9 @@ export default function CreatePostScreen() {
               ]}
             >
               <TextInput
-                style={[styles.titleInput, { outlineStyle: "none" } as any]}
+                style={styles.titleInput}
                 placeholder="Title your post..."
-                placeholderTextColor="#64748B"
+                placeholderTextColor={COLORS.placeholderText}
                 value={title}
                 onChangeText={(val) => {
                   setTitle(val);
@@ -156,6 +194,8 @@ export default function CreatePostScreen() {
                 onFocus={() => setIsTitleFocused(true)}
                 onBlur={() => setIsTitleFocused(false)}
                 maxLength={MAX_TITLE_LENGTH}
+                editable={!isBusy}
+                accessibilityLabel="Post title"
               />
             </View>
 
@@ -166,9 +206,9 @@ export default function CreatePostScreen() {
               ]}
             >
               <TextInput
-                style={[styles.contentInput, { outlineStyle: "none" } as any]}
+                style={styles.contentInput}
                 placeholder="What's on your mind?"
-                placeholderTextColor="#64748B"
+                placeholderTextColor={COLORS.placeholderText}
                 value={content}
                 onChangeText={(val) => {
                   setContent(val);
@@ -178,6 +218,9 @@ export default function CreatePostScreen() {
                 onBlur={() => setIsContentFocused(false)}
                 multiline
                 textAlignVertical="top"
+                maxLength={MAX_CONTENT_LENGTH}
+                editable={!isBusy}
+                accessibilityLabel="Post content"
               />
             </View>
 
@@ -188,14 +231,17 @@ export default function CreatePostScreen() {
                   pressed && styles.generateBtnPressed,
                 ]}
                 onPress={handleGeneratePost}
+                disabled={isBusy}
+                accessibilityRole="button"
+                accessibilityLabel="Generate a random post"
               >
-                <Ionicons name="sparkles" size={14} color="#A3E635" />
+                <Ionicons name="sparkles" size={14} color={COLORS.active} />
                 <Text style={styles.generateBtnText}>Generate Post</Text>
               </Pressable>
 
-              <View style={[styles.charCountBadge]}>
-                <Text style={[styles.charCountText]}>
-                  {contentLength} Characters
+              <View style={styles.charCountBadge}>
+                <Text style={styles.charCountText}>
+                  {contentLength}/{MAX_CONTENT_LENGTH}
                 </Text>
               </View>
             </View>

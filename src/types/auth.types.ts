@@ -8,6 +8,7 @@ export interface DecodedUser {
   name: string;
   email: string;
   role: "USER" | "ADMIN";
+  fcmToken: string | null;
   iat: number;
   exp: number;
 }

@@ -6,15 +6,9 @@ const REFRESH_TOKEN_KEY = "refreshToken";
 
 export const storageService = {
   async saveTokens(tokens: AuthTokens) {
-    await AsyncStorage.setItem(
-      ACCESS_TOKEN_KEY,
-      tokens.accessToken
-    );
+    await AsyncStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
 
-    await AsyncStorage.setItem(
-      REFRESH_TOKEN_KEY,
-      tokens.refreshToken
-    );
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
   },
 
   async getAccessToken() {
