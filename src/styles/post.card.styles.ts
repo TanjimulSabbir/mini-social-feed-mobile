@@ -1,0 +1,236 @@
+import { StyleSheet } from "react-native";
+
+export const postCardStyles = StyleSheet.create({
+  card: {
+    backgroundColor: "rgba(20, 38, 38, 0.75)",
+    borderRadius: 20,
+    padding: 18,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  cardHighlighted: {
+    borderColor: "#A3E635",
+    borderWidth: 1.5,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "rgba(163, 230, 53, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(163, 230, 53, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  avatarText: {
+    color: "#A3E635",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  authorName: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#A3E635",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  titleText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#F8FAFC",
+    marginBottom: 8,
+    fontFamily: "Inter-Bold",
+  },
+  content: {
+    fontSize: 14,
+    color: "#E2E8F0",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 14,
+  },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  actionBtnActive: {
+    backgroundColor: "rgba(163, 230, 53, 0.12)",
+    borderColor: "rgba(163, 230, 53, 0.25)",
+  },
+  actionText: {
+    fontSize: 13,
+    color: "#94A3B8",
+    fontWeight: "600",
+  },
+  actionTextActive: {
+    color: "#A3E635",
+  },
+  commentInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: "#0B1516",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+
+    outlineStyle: "dashed",
+    outlineWidth: 0,
+  },
+  sendBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#A3E635",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendBtnDisabled: {
+    opacity: 0.4,
+  },
+
+  // Modal styles
+  modalSafeArea: {
+    flex: 1,
+    backgroundColor: "#071A1B",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#F8FAFC",
+  },
+  modalListContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
+    flexGrow: 1,
+  },
+  modalEmpty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    gap: 10,
+  },
+  modalEmptyText: {
+    color: "#64748B",
+    fontSize: 13,
+    paddingBottom: 4,
+  },
+  commentRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    backgroundColor: "rgba(163, 230, 53, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(163, 230, 53, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  commentAvatarText: {
+    color: "#A3E635",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  commentBody: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 12,
+    padding: 10,
+  },
+  commentAuthor: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#A3E635",
+    marginBottom: 3,
+  },
+  commentContent: {
+    fontSize: 13,
+    color: "#E2E8F0",
+    lineHeight: 18,
+  },
+  modalInputRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+  },
+
+  // --- NEWLY ADDED ENHANCEMENT STYLES ---
+  avatarWrapper: {
+    marginRight: 12,
+  },
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  globalTimeText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#64748B",
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    marginVertical: 12,
+  },
+  actionBtnPressed: {
+    opacity: 0.7,
+  },
+  actionTextLiked: {
+    color: "#EF4444",
+  },
+});

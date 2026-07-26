@@ -1,14 +1,19 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../constants/config';
-import { storageService } from '../services/storage.service';
-import { ApiResponse, AuthTokens } from '../types/auth.types';
+import axios from "axios";
+import { API_BASE_URL } from "@/constants/config";
+import { AuthTokens } from "@/types/auth.types";
+import { storageService } from "@/services/storage.services";
+import { ApiResponse } from "@/types/common.types";
+
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipAuthRefresh?: boolean;
+  }
+}
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Plain instance for the refresh call itself — must NOT go through the
-// interceptor below, or a failed refresh would trigger infinite recursion.
 const refreshClient = axios.create({ baseURL: API_BASE_URL });
 
 apiClient.interceptors.request.use(async (config) => {
@@ -27,11 +32,14 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.skipAuthRefresh
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        // Queue this request until the in-flight refresh finishes
         return new Promise((resolve) => {
           pendingQueue.push((newToken: string) => {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -43,14 +51,12 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
       try {
         const refreshToken = await storageService.getRefreshToken();
-        if (!refreshToken) throw new Error('No refresh token available');
+        if (!refreshToken) throw new Error("No refresh token available");
 
-        // ASSUMPTION: refresh-token endpoint returns the same wrapped shape
-        // as login: { success, statusCode, message, data: { accessToken, refreshToken } }
-        // Confirm against your actual backend response and adjust if needed.
         const { data } = await refreshClient.post<ApiResponse<AuthTokens>>(
-          '/auth/refresh-token',
-          { refreshToken }
+          "/auth/refresh-token",
+          { refreshToken },
+          { skipAuthRefresh: true },
         );
 
         await storageService.saveTokens(data.data);
@@ -62,7 +68,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         await storageService.clearTokens();
         pendingQueue = [];
-        // TODO: trigger navigation to Login screen / logout in auth.store here
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -70,5 +76,5 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
