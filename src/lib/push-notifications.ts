@@ -28,7 +28,6 @@ export async function sendTokenToBackend(deviceToken: string) {
 
   try {
     const accessToken = await storageService.getAccessToken();
-    Alert.alert(accessToken ?? "AccessToken not found");
     if (accessToken) {
       const user = jwtDecode<DecodedUser>(accessToken);
       backendToken = user.fcmToken ?? null;
@@ -109,5 +108,5 @@ export async function syncPushTokenWithBackend() {
     return;
   }
 
-  // await sendTokenToBackend(token);
+  await sendTokenToBackend(token);
 }

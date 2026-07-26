@@ -24,6 +24,7 @@ import { useToggleLike } from "@/hooks/posts/usePostMutation";
 import { FeedStyles as styles } from "@/styles/feed.styles";
 import { Post } from "@/types/post.types";
 import { useDebounce } from "@/utils/debouncer";
+import { FeedSkeleton } from "@/components/ui/skeleton/post-card-skeleton";
 
 export default function FeedScreen() {
   const router = useRouter();
@@ -107,9 +108,7 @@ export default function FeedScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.active} />
-          </View>
+          <FeedSkeleton count={4} />
         ) : (
           <FlatList
             data={posts}
