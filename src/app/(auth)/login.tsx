@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,40 +13,53 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
+import { z } from "zod";
 
+import { FormInput } from "@/components/form/FormInput";
 import { useLogin } from "@/hooks/useAuthMutations";
 import { loginSchema } from "@/schema/login.schema";
 import { LoginFormStyles } from "@/styles/login.style";
-import Toast from "react-native-toast-message";
-import { validateForm } from "@/utils/validate.form";
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
   const loginMutation = useLogin();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const passwordRef = useRef<TextInput>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {},
-  );
 
-  function handleSubmit() {
-    const validate = validateForm(loginSchema, { email, password });
-    if (!validate.valid) setErrors(validate.errors);
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+    mode: "onSubmit",
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(
-      { email: email.trim(), password },
+      { email: data.email.trim(), password: data.password },
       {
         onSuccess: () => {
-          Toast.show({
-            type: "success",
-            text1: "Login successful!",
-          });
+          Toast.show({ type: "success", text1: "Login successful!" });
           router.replace("/(tabs)");
+        },
+        onError: (err: any) => {
+          Toast.show({
+            type: "error",
+            text1: "Login failed",
+            text2:
+              err?.message ?? "Please check your credentials and try again.",
+          });
         },
       },
     );
-  }
+  };
+
+  const busy = isSubmitting || loginMutation.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -68,97 +83,52 @@ export default function LoginScreen() {
         </View>
 
         <View style={LoginFormStyles.card}>
-          {/* Email Field */}
-          <View style={LoginFormStyles.fieldGroup}>
-            <Text style={LoginFormStyles.label}>EMAIL</Text>
-            <View
-              style={[
-                LoginFormStyles.inputWrapper,
-                errors.email ? LoginFormStyles.inputErrorBorder : null,
-              ]}
-            >
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color="#64748B"
-                style={LoginFormStyles.inputIcon}
-              />
-              <TextInput
-                style={LoginFormStyles.input}
-                placeholder="you@example.com"
-                placeholderTextColor="#64748B"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (errors.email)
-                    setErrors((prev) => ({ ...prev, email: undefined }));
-                }}
-              />
-            </View>
-            {errors.email && (
-              <Text style={LoginFormStyles.fieldErrorText}>{errors.email}</Text>
-            )}
-          </View>
+          <FormInput
+            control={control}
+            name="email"
+            label="EMAIL"
+            iconName="mail-outline"
+            placeholder="tanjimul@sabbir.dev"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            editable={!busy}
+            styles={LoginFormStyles}
+          />
 
-          {/* Password Field — now a sibling, not nested inside the email fieldGroup */}
-          <View style={LoginFormStyles.fieldGroup}>
-            <Text style={LoginFormStyles.label}>PASSWORD</Text>
-            <View
-              style={[
-                LoginFormStyles.inputWrapper,
-                errors.password ? LoginFormStyles.inputErrorBorder : null,
-              ]}
-            >
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#64748B"
-                style={LoginFormStyles.inputIcon}
-              />
-              <TextInput
-                style={LoginFormStyles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#64748B"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (errors.password)
-                    setErrors((prev) => ({ ...prev, password: undefined }));
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color="#64748B"
-                />
-              </TouchableOpacity>
-            </View>
-            {errors.password && (
-              <Text style={LoginFormStyles.fieldErrorText}>
-                {errors.password}
-              </Text>
-            )}
-          </View>
+          <FormInput
+            control={control}
+            name="password"
+            label="PASSWORD"
+            iconName="lock-closed-outline"
+            placeholder="••••••••"
+            isPassword
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword((v) => !v)}
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit(onSubmit)}
+            editable={!busy}
+            styles={LoginFormStyles}
+          />
 
-          {/* Submit Button */}
           <TouchableOpacity
             style={[
               LoginFormStyles.submitBtn,
-              loginMutation.isPending && LoginFormStyles.btnDisabled,
+              busy && LoginFormStyles.btnDisabled,
             ]}
-            onPress={handleSubmit}
-            disabled={loginMutation.isPending}
+            onPress={handleSubmit(onSubmit)}
+            disabled={busy}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy, busy }}
           >
-            {loginMutation.isPending ? (
+            {busy ? (
               <ActivityIndicator color="#0A1C1C" size="small" />
             ) : (
               <Text style={LoginFormStyles.submitBtnText}>Log in</Text>
@@ -166,7 +136,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Footer Link */}
         <View style={LoginFormStyles.footer}>
           <Text style={LoginFormStyles.footerText}>New to the platform? </Text>
           <Link href="/(auth)/signup" style={LoginFormStyles.link}>
