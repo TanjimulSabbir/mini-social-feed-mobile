@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,7 +12,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { timeAgo } from "@/utils/date";
+import {
+  useMarkAllAsRead,
+  useMarkAsRead,
+} from "@/hooks/notifications/useNotificationMutations";
+import {
+  flattenNotifications,
+  useNotificationsInfinite,
+} from "@/hooks/notifications/userNotificationInfinite";
+import { formatTimeAgo } from "@/utils/date";
+import { StatusBar } from "expo-status-bar";
 
 function NotificationRow({
   notification,
@@ -21,58 +30,81 @@ function NotificationRow({
   notification: any;
   onPress: () => void;
 }) {
+  const isLike = notification.type === "LIKE";
   return (
     <TouchableOpacity
-      style={[styles.row, !notification.read && styles.rowUnread]}
+      style={[styles.row, !notification.isRead && styles.rowUnread]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <Ionicons
-        name={notification.type === "like" ? "heart" : "chatbubble"}
+        name={isLike ? "heart" : "chatbubble"}
         size={20}
-        color={notification.type === "like" ? "#ef4444" : "#4f46e5"}
+        color={isLike ? "#ef4444" : "#4f46e5"}
         style={styles.rowIcon}
       />
       <View style={styles.rowBody}>
         <Text style={styles.rowText}>
           <Text style={styles.rowUsername}>
-            {notification.fromUser.username}
+            {notification.actor?.name ?? "Someone"}
           </Text>{" "}
-          {notification.message}
+          {isLike ? "liked your post" : "commented on your post"}
         </Text>
-        <Text style={styles.rowTime}>{timeAgo(notification.createdAt)}</Text>
+        <Text style={styles.rowTime}>
+          {formatTimeAgo(notification.createdAt)}
+        </Text>
       </View>
-      {!notification.read && <View style={styles.dot} />}
+      {!notification.isRead && <View style={styles.dot} />}
     </TouchableOpacity>
   );
 }
 
 export default function NotificationsScreen() {
-  // const router = useRouter();
-  // const { items, loading, fetch, markRead, markAllRead, unreadCount } = useNotificationsStore();
+  const router = useRouter();
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotificationsInfinite();
 
-  // useEffect(() => {
-  //   fetch();
-  // }, [fetch]);
+  const markAsRead = useMarkAsRead();
+  const markAllAsRead = useMarkAllAsRead();
 
-  // function handlePress(notification: AppNotification) {
-  //   if (!notification.read) markRead(notification.id);
-  //   router.push({ pathname: "/(tabs)/feed", params: { highlightPostId: notification.postId } });
-  // }
-  return <View> Coming soon</View>;
+  const notifications = useMemo(
+    () => flattenNotifications(data?.pages),
+    [data],
+  );
+
+  const unreadCount = data?.pages?.[0]?.unreadCount ?? 0;
+
+  function handlePress(notification: any) {
+    if (!notification.isRead) markAsRead.mutate(notification.id);
+    if (notification.postId) {
+      router.push({
+        pathname: "/",
+        params: { highlightPostId: notification.postId },
+      });
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>Notifications</Text>
         {unreadCount > 0 && (
-          <TouchableOpacity onPress={() => markAllRead()}>
+          <TouchableOpacity onPress={() => markAllAsRead.mutate()}>
             <Text style={styles.markAllText}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <FlatList
-        data={items}
+        data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <NotificationRow
@@ -81,11 +113,17 @@ export default function NotificationsScreen() {
           />
         )}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={fetch} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
-        contentContainerStyle={items.length === 0 && styles.emptyContent}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
+        contentContainerStyle={
+          notifications.length === 0 ? styles.emptyContent : undefined
+        }
         ListEmptyComponent={
-          loading ? (
+          isLoading ? (
             <ActivityIndicator color="#4f46e5" style={{ marginTop: 40 }} />
           ) : (
             <View style={styles.centered}>
@@ -97,6 +135,11 @@ export default function NotificationsScreen() {
               <Text style={styles.emptyText}>No notifications yet</Text>
             </View>
           )
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator style={{ marginVertical: 16 }} />
+          ) : null
         }
       />
     </SafeAreaView>

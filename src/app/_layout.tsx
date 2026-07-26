@@ -5,14 +5,16 @@ import { queryClient } from "@/lib/query-client";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import AuthGate from "@/utils/auth-gate";
+import { ErrorModal } from "@/components/error.modal";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthGate>
-          <StatusBar style="auto" />
+          <StatusBar style="light" />
           <Slot />
+          <ErrorModal />
         </AuthGate>
       </QueryClientProvider>
     </SafeAreaProvider>

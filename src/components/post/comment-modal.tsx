@@ -1,18 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   Text,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useComments } from "@/hooks/useCommentQueries";
 import { postCardStyles as styles } from "@/styles/post.card.styles";
-import CommentInput from "./comment-input";
+import CommentInput from "./comment-bar";
 import { CommentList } from "./comment-list";
 
 interface CommentsModalProps {

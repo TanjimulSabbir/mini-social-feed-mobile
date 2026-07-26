@@ -1,24 +1,33 @@
-import { syncPushTokenWithBackend } from "@/lib/push-notifications";
+import {
+  syncPushTokenWithBackend,
+  sendTokenToBackend,
+} from "@/lib/push-notifications";
 import { useNotificationResponseListener } from "@/hooks/notifications/useNotificationResponseListener";
 import { useAuthStore } from "@/store/auth.store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 import * as Notifications from "expo-notifications";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isHydrated, isAuthenticated, hydrate } = useAuthStore();
+  const hasSyncedRef = useRef(false);
 
   useEffect(() => {
     hydrate();
   }, []);
 
   useEffect(() => {
-    if (!isHydrated || !isAuthenticated) return;
+    if (!isHydrated || !isAuthenticated) {
+      hasSyncedRef.current = false;
+      return;
+    }
 
-    syncPushTokenWithBackend();
-
-    const sub = Notifications.addPushTokenListener(() => {
+    if (!hasSyncedRef.current) {
+      hasSyncedRef.current = true;
       syncPushTokenWithBackend();
+    }
+    const sub = Notifications.addPushTokenListener((event) => {
+      sendTokenToBackend(event.data);
     });
 
     return () => sub.remove();

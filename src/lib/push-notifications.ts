@@ -13,9 +13,26 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function registerForPushNotificationsAsync(): Promise<
-  string | null
-> {
+let lastSyncedToken: string | null = null;
+
+export async function sendTokenToBackend(token: string) {
+  if (!token || token === lastSyncedToken) return;
+  try {
+    await notificationApi.updateFcmToken(token);
+    lastSyncedToken = token;
+    console.log("FCM token synced successfully");
+  } catch (err: any) {
+    console.error(
+      "Failed to sync FCM token —",
+      "name:", err?.name,
+      "message:", err?.message,
+      "status:", err?.response?.status,
+      "data:", err?.response?.data,
+    );
+  }
+}
+
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (!Device.isDevice) {
     console.warn("Push notifications require a physical device");
     return null;
@@ -43,20 +60,15 @@ export async function registerForPushNotificationsAsync(): Promise<
     });
   }
 
-  // Android: this is the real FCM registration token — matches firebase-admin.
-  // iOS: this returns the raw APNs token, NOT an FCM token — see notes above,
-  // this path needs @react-native-firebase/messaging before iOS will work.
   const tokenResponse = await Notifications.getDevicePushTokenAsync();
   return tokenResponse.data;
 }
 
 export async function syncPushTokenWithBackend() {
   const token = await registerForPushNotificationsAsync();
-  if (!token) return;
-
-  try {
-    await notificationApi.updateFcmToken(token);
-  } catch (err) {
-    console.error("Failed to sync FCM token:", JSON.stringify(err));
+  if (!token) {
+    console.warn("No push token to sync");
+    return;
   }
+  await sendTokenToBackend(token);
 }

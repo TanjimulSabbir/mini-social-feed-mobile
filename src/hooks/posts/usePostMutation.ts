@@ -12,6 +12,9 @@ export function useCreatePost() {
       queryClient.invalidateQueries({ queryKey: postKeys.list() });
       queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
     },
+    onError: (err) => {
+      console.error("createPost failed:", err);
+    },
   });
 }
 
@@ -30,6 +33,9 @@ export function useUpdatePost() {
       queryClient.invalidateQueries({ queryKey: postKeys.list() });
       queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
     },
+    onError: (err) => {
+      console.error("updatePost failed:", err);
+    },
   });
 }
 
@@ -41,10 +47,13 @@ export function useDeletePost() {
       queryClient.invalidateQueries({ queryKey: postKeys.list() });
       queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
     },
+    onError: (err) => {
+      console.error("deletePost failed:", err);
+    },
   });
 }
 
-function patchPostInCache(
+export function patchPostInCache(
   oldData: any,
   postId: string,
   transform: (p: Post) => Post,
@@ -66,6 +75,7 @@ function patchPostInCache(
   }
   return oldData;
 }
+
 export function useToggleLike() {
   const queryClient = useQueryClient();
 
@@ -77,13 +87,24 @@ export function useToggleLike() {
       const previous = queryClient.getQueriesData({ queryKey: postKeys.all });
 
       queryClient.setQueriesData({ queryKey: postKeys.all }, (old) =>
-        patchPostInCache(old, postId, (p) => ({ ...p, isLiked: !p.isLikedByMe })),
+        patchPostInCache(old, postId, (p) => ({
+          ...p,
+          isLikedByMe: !p.isLikedByMe,
+          _count: {
+            ...p._count,
+            likes: p.isLikedByMe
+              ? Math.max(0, (p._count?.likes ?? 0) - 1)
+              : (p._count?.likes ?? 0) + 1,
+            comments: p._count?.comments ?? 0,
+          },
+        })),
       );
 
       return { previous };
     },
 
-    onError: (_err, _postId, context) => {
+    onError: (err, _postId, context) => {
+      console.error("toggleLike failed:", err);
       context?.previous?.forEach(([key, data]) => {
         queryClient.setQueryData(key, data);
       });

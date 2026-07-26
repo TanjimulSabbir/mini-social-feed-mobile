@@ -1,15 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import {
-  Pressable,
-  Text,
-  View
-} from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { postCardStyles as styles } from "@/styles/post.card.styles";
 import { Post } from "@/types/post.types";
 import { formatTimeAgo } from "@/utils/date"; // or your relative time utility
-import CommentInput from "./comment-input";
+import CommentInput from "./comment-bar";
 import { CommentsModal } from "./comment-modal";
 
 interface PostCardProps {
@@ -19,11 +15,7 @@ interface PostCardProps {
   onSubmitComment?: (postId: string, text: string) => Promise<void> | void;
 }
 
-export function PostCard({
-  post,
-  highlighted,
-  onToggleLike,
-}: PostCardProps) {
+export function PostCard({ post, highlighted, onToggleLike }: PostCardProps) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
 

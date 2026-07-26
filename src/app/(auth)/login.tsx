@@ -9,14 +9,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { useAuthStore } from "@/store/auth.store";
 import { LoginFormStyles } from "@/styles/login.style";
 import { loginSchema } from "@/schema/login.schema";
-
-
+import { validateForm } from "@/utils/validate.form";
+import { getErrorMessage } from "@/utils/error.utils";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -31,37 +31,31 @@ export default function LoginScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  function validate() {
-    const result = loginSchema.safeParse({ email: email.trim(), password });
+  async function handleSubmit() {
+    const result = validateForm(loginSchema, {
+      email: email.trim(),
+      password,
+    });
 
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
+    if (!result.valid) {
       setErrors({
-        email: fieldErrors.email?.[0],
-        password: fieldErrors.password?.[0],
+        email: result.errors.email,
+        password: result.errors.password,
       });
-      return false;
+      return;
     }
 
     setErrors({});
-    return true;
-  }
-
-  async function handleSubmit() {
     setFormError(null);
-    if (!validate()) return;
-
     setSubmitting(true);
+
     try {
-      const user = await login({ email: email.trim(), password });
-      console.log(user, "login result");
+      await login(result.data);
+
       router.replace("/(tabs)");
     } catch (err) {
-      setFormError(
-        err instanceof Error
-          ? err.message
-          : "Login failed. Please try again.",
-      );
+      console.log(err);
+      setFormError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -171,13 +165,18 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
             {errors.password && (
-              <Text style={LoginFormStyles.fieldErrorText}>{errors.password}</Text>
+              <Text style={LoginFormStyles.fieldErrorText}>
+                {errors.password}
+              </Text>
             )}
           </View>
 
           {/* Submit Button - Now uses the Lime-Green Accent */}
           <TouchableOpacity
-            style={[LoginFormStyles.submitBtn, submitting && LoginFormStyles.btnDisabled]}
+            style={[
+              LoginFormStyles.submitBtn,
+              submitting && LoginFormStyles.btnDisabled,
+            ]}
             onPress={handleSubmit}
             disabled={submitting}
             activeOpacity={0.8}
@@ -194,11 +193,10 @@ export default function LoginScreen() {
         <View style={LoginFormStyles.footer}>
           <Text style={LoginFormStyles.footerText}>New to the platform? </Text>
           <Link href="/(auth)/signup" style={LoginFormStyles.link}>
-           Create account
+            Create account
           </Link>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-

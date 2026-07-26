@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,8 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PostCard } from "@/components/post/post-card";
+import { SearchBar } from "@/components/search-input";
 import { usePostsInfinite } from "@/hooks/posts/usePostInfinite";
 import { useToggleLike } from "@/hooks/posts/usePostMutation";
+import { useDebounce } from "@/utils/debouncer";
 import { FeedStyles as styles } from "@/styles/feed.styles";
 
 export default function FeedScreen() {
@@ -21,6 +23,9 @@ export default function FeedScreen() {
   const { highlightPostId } = useLocalSearchParams<{
     highlightPostId?: string;
   }>();
+
+  const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 400);
 
   const {
     data,
@@ -31,7 +36,7 @@ export default function FeedScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePostsInfinite();
+  } = usePostsInfinite(debouncedSearch);
 
   const toggleLike = useToggleLike();
 
@@ -60,6 +65,8 @@ export default function FeedScreen() {
           <Text style={styles.createBtnText}>Post</Text>
         </TouchableOpacity>
       </View>
+
+      <SearchBar value={searchText} onChangeText={setSearchText} />
 
       {/* Main Content */}
       {isLoading ? (
@@ -102,7 +109,9 @@ export default function FeedScreen() {
               <Text style={styles.emptyText}>
                 {isError
                   ? "Couldn't load the feed. Pull down to try again."
-                  : "No posts yet — be the first to start the conversation!"}
+                  : debouncedSearch
+                    ? `No posts found for "${debouncedSearch}"`
+                    : "No posts yet — be the first to start the conversation!"}
               </Text>
             </View>
           }

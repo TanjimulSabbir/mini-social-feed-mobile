@@ -1,5 +1,6 @@
 import { apiClient } from './client';
-import { ApiResponse, AuthTokens, LoginPayload, SignupPayload } from '../types/auth.types';
+import {  AuthTokens, LoginPayload, SignupPayload } from '../types/auth.types';
+import { ApiResponse } from '@/types/common.types';
 
 export const authApi = {
   async login(payload: LoginPayload): Promise<AuthTokens> {

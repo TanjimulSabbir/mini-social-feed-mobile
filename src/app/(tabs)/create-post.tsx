@@ -88,7 +88,7 @@ export default function CreatePostScreen() {
               onPress={() => router.back()}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Ionicons name="close" size={20} color="#CBD5E1" />
+              <Ionicons name="arrow-back" size={20} color="#CBD5E1" />
             </Pressable>
 
             <View style={styles.headerTitleContainer}>

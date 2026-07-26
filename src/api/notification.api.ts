@@ -28,10 +28,17 @@ const updateFcmToken = async (fcmToken: string) => {
   });
   return res.data.data;
 };
+const removeFcmToken = async () => {
+  const res = await apiClient.patch("/users/device/update-fcm-token", {
+    fcmToken: null,
+  });
+  return res.data.data;
+};
 
 export const notificationApi = {
   getMyNotifications,
   markAsRead,
   markAllAsRead,
   updateFcmToken,
+  removeFcmToken,
 };

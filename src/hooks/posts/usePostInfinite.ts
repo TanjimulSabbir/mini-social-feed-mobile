@@ -4,11 +4,12 @@ import { postApi } from "@/api/posts.api";
 
 const PAGE_LIMIT = 10;
 
-export function usePostsInfinite() {
+
+export function usePostsInfinite(searchTerm: string = "") {
   return useInfiniteQuery({
-    queryKey: postKeys.list(),
+    queryKey: postKeys.list(searchTerm),
     queryFn: ({ pageParam }) =>
-      postApi.getAllPosts({ page: pageParam, limit: PAGE_LIMIT }),
+      postApi.getAllPosts({ page: pageParam, limit: PAGE_LIMIT, searchTerm }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce((sum, p) => sum + p.posts.length, 0);
@@ -17,5 +18,6 @@ export function usePostsInfinite() {
       }
       return undefined;
     },
+    staleTime: 30_000,
   });
 }

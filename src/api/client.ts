@@ -1,14 +1,14 @@
-import { create } from "axios";
+import axios from "axios";
 import { API_BASE_URL } from "@/constants/config";
 import { AuthTokens } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
 import { ApiResponse } from "@/types/common.types";
 
-export const apiClient = create({
+export const apiClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
-const refreshClient = create({ baseURL: API_BASE_URL });
+const refreshClient = axios.create({ baseURL: API_BASE_URL });
 
 apiClient.interceptors.request.use(async (config) => {
   const token = await storageService.getAccessToken();
@@ -19,7 +19,7 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 let isRefreshing = false;
-let pendingQueue: ((token: string) => void)[] = [];
+let pendingQueue: Array<(token: string) => void> = [];
 
 apiClient.interceptors.response.use(
   (response) => response,

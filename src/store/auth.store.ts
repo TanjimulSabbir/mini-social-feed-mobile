@@ -4,6 +4,7 @@ import { authApi } from "@/api/auth.api";
 
 import { DecodedUser, LoginPayload, SignupPayload } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
+import { notificationApi } from "@/api/notification.api";
 
 interface AuthState {
   user: DecodedUser | null;
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (payload) => {
     const tokens = await authApi.login(payload);
+    console.log(tokens);
     await storageService.saveTokens(tokens);
     const user = jwtDecode<DecodedUser>(tokens.accessToken);
     set({ user, isAuthenticated: true });
@@ -31,8 +33,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   signup: async (payload) => {
     await authApi.signup(payload);
   },
-
   logout: async () => {
+    try {
+      const res = await notificationApi.removeFcmToken();
+      console.log(res);
+    } catch (err) {
+      console.error("Failed to remove FCM token on logout:", err);
+    }
     await storageService.clearTokens();
     set({ user: null, isAuthenticated: false });
   },

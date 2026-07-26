@@ -11,3 +11,17 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormDataType = z.infer<typeof loginSchema>;
+
+export function validate({ email, password }: LoginFormDataType) {
+  const result = loginSchema.safeParse({ email: email.trim(), password });
+
+  if (!result.success) {
+    const fieldErrors = result.error.flatten().fieldErrors;
+    return {
+      email: fieldErrors.email?.[0] || "",
+      password: fieldErrors.password?.[0] || "",
+    };
+  }
+
+  return true;
+}

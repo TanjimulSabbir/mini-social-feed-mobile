@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/auth.store';
 // Using standard Vector Icons
 import { Ionicons } from '@expo/vector-icons'; 
+import { StatusBar } from 'expo-status-bar';
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -13,6 +14,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         
         {/* Profile Card Header */}

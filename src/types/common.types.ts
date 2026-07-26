@@ -13,8 +13,9 @@ export interface ApiResponse<T> {
 }
 
 export interface GenericErrorResponse {
+  success: false;
   statusCode: number | string;
   message: string;
-  errorName: string;
+  name: string;
   errorInfo: Record<string, unknown>;
 }
