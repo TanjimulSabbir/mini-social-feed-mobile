@@ -1,10 +1,10 @@
-import { create } from "zustand";
-import { jwtDecode } from "jwt-decode";
 import { authApi } from "@/api/auth.api";
+import { jwtDecode } from "jwt-decode";
+import { create } from "zustand";
 
-import { DecodedUser, LoginPayload, SignupPayload } from "@/types/auth.types";
 import { storageService } from "@/services/storage.services";
-import Toast from "react-native-toast-message";
+import { DecodedUser, LoginPayload, SignupPayload } from "@/types/auth.types";
+import { router } from "expo-router";
 
 interface AuthState {
   user: DecodedUser | null;
@@ -24,10 +24,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (payload) => {
     const tokens = await authApi.login(payload);
-    Toast.show({
-      type: "success",
-      text1: "Login successful",
-    });
     await storageService.saveTokens(tokens);
     const user = jwtDecode<DecodedUser>(tokens.accessToken);
     set({ user, isAuthenticated: true });
@@ -40,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await storageService.clearTokens();
     set({ user: null, isAuthenticated: false });
+    router.push("/(auth)/login");
   },
 
   hydrate: async () => {

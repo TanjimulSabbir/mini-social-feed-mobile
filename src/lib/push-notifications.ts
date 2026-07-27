@@ -1,7 +1,11 @@
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { jwtDecode } from "jwt-decode";
 import { Platform } from "react-native";
+
 import { notificationApi } from "@/api/notification.api";
+import { storageService } from "@/services/storage.services";
+import { DecodedUser } from "@/types/auth.types";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,26 +19,49 @@ Notifications.setNotificationHandler({
 
 let lastSyncedToken: string | null = null;
 
-export async function sendTokenToBackend(token: string) {
-  if (!token || token === lastSyncedToken) return;
+export async function sendTokenToBackend(deviceToken: string) {
+  if (!deviceToken) return;
+  if (lastSyncedToken === deviceToken) {
+    return;
+  }
+
+  let backendToken: string | null = null;
+
   try {
-    await notificationApi.updateFcmToken(token);
-    lastSyncedToken = token;
+    const accessToken = await storageService.getAccessToken();
+    if (accessToken) {
+      const user = jwtDecode<DecodedUser>(accessToken);
+      backendToken = user.fcmToken ?? null;
+    }
+  } catch (error) {
+    console.warn("Failed to decode access token.");
+  }
+
+  if (backendToken === deviceToken) {
+    lastSyncedToken = deviceToken;
+    return;
+  }
+
+  try {
+    await notificationApi.updateFcmToken(deviceToken);
+    lastSyncedToken = deviceToken;
     console.log("FCM token synced successfully");
   } catch (err: any) {
-    console.error(
-      "Failed to sync FCM token —",
-      "name:", err?.name,
-      "message:", err?.message,
-      "status:", err?.response?.status,
-      "data:", err?.response?.data,
-    );
+    const details = [
+      `message: ${err?.message}`,
+      `status: ${err?.response?.status}`,
+      `data: ${JSON.stringify(err?.response?.data)}`,
+      `code: ${err?.code}`,
+    ].join("\n");
+
+    console.error("Failed to sync FCM token:", details);
   }
 }
 
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
+export async function registerForPushNotificationsAsync(): Promise<
+  string | null
+> {
   if (!Device.isDevice) {
-    console.warn("Push notifications require a physical device");
     return null;
   }
 
@@ -47,7 +74,6 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   if (finalStatus !== "granted") {
-    console.warn("Push notification permission not granted");
     return null;
   }
 
@@ -55,20 +81,24 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
       lightColor: "#A3E635",
     });
   }
 
-  const tokenResponse = await Notifications.getDevicePushTokenAsync();
-  return tokenResponse.data;
+  try {
+    const token = await Notifications.getDevicePushTokenAsync();
+    return token.data;
+  } catch (err: any) {
+    return null;
+  }
 }
 
 export async function syncPushTokenWithBackend() {
   const token = await registerForPushNotificationsAsync();
+
   if (!token) {
-    console.warn("No push token to sync");
     return;
   }
+
   await sendTokenToBackend(token);
 }

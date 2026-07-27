@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mini-social-feed-mobile",
+    "name": "Mini Social",
     "slug": "mini-social-feed-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,17 +8,17 @@
     "scheme": "minisocialfeedmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "package": "com.tanjimulsabbir.minisocial",
       "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#071A1B",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
+      "softwareKeyboardLayoutMode": "pan",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#071A1B",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -39,7 +39,10 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#A3E635"
+          "color": "#A3E635",
+          "sounds": [
+            "./assets/notification_sound.mp3"
+          ]
         }
       ]
     ],

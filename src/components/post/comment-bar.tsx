@@ -1,16 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 
+import { COLORS } from "@/constants/theme";
 import { useCreateComment } from "@/hooks/useCommentMutations";
 import GlobalStyles from "@/styles/global.styles";
 import { postCardStyles as styles } from "@/styles/post.card.styles";
-import { useState } from "react";
 
 interface CommentInputProps {
   value: string;
@@ -31,16 +33,23 @@ export default function CommentInput({
   const isDisabled = !value.trim() || createComment.isPending;
   const [isFocused, setIsFocused] = useState(false);
 
-  // State to manage feedback message
   const [statusMessage, setStatusMessage] = useState<{
     text: string;
     type: "success" | "error";
   } | null>(null);
 
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    };
+  }, []);
+
   const showFeedback = (text: string, type: "success" | "error") => {
     setStatusMessage({ text, type });
-    // Automatically clear the message after 3 seconds
-    setTimeout(() => setStatusMessage(null), 3000);
+    if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    clearTimerRef.current = setTimeout(() => setStatusMessage(null), 3000);
   };
 
   function handleSubmitComment() {
@@ -54,8 +63,9 @@ export default function CommentInput({
           onChangeText("");
           showFeedback("Comment posted!", "success");
         },
-        onError: (err) => {
-        }
+        onError: () => {
+          showFeedback("Couldn't post your comment. Try again.", "error");
+        },
       },
     );
   }
@@ -69,37 +79,48 @@ export default function CommentInput({
             isFocused && GlobalStyles.commentInputFocused,
           ]}
           placeholder={placeholder}
-          placeholderTextColor="#64748B"
+          placeholderTextColor={COLORS.inactive}
           value={value}
           onChangeText={onChangeText}
           onSubmitEditing={handleSubmitComment}
           returnKeyType="send"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          editable={!createComment.isPending}
+          accessibilityLabel="Comment input"
         />
 
         <Pressable
           style={[styles.sendBtn, isDisabled && styles.sendBtnDisabled]}
           onPress={handleSubmitComment}
           disabled={isDisabled}
+          accessibilityRole="button"
+          accessibilityLabel="Send comment"
+          accessibilityState={{
+            disabled: isDisabled,
+            busy: createComment.isPending,
+          }}
         >
           {createComment.isPending ? (
-            <ActivityIndicator size="small" color="#071A1B" />
+            <ActivityIndicator size="small" color={COLORS.background} />
           ) : (
-            <Ionicons name="send" size={15} color="#071A1B" />
+            <Ionicons name="send" size={15} color={COLORS.background} />
           )}
         </Pressable>
       </View>
 
-      {/* Render status message when present */}
       {statusMessage && (
         <Text
-          style={{
-            fontSize: 12,
-            marginTop: 4,
-            marginLeft: 4,
-            color: statusMessage.type === "success" ? "#16a34a" : "#dc2626",
-          }}
+          style={[
+            localStyles.statusText,
+            {
+              color:
+                statusMessage.type === "success"
+                  ? COLORS.success
+                  : COLORS.error,
+            },
+          ]}
+          accessibilityLiveRegion="polite"
         >
           {statusMessage.text}
         </Text>
@@ -107,3 +128,10 @@ export default function CommentInput({
     </View>
   );
 }
+const localStyles = StyleSheet.create({
+  statusText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+});

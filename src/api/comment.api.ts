@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/client';
-import { ApiResponse } from '@/types/auth.types';
 import { Comment, CreateCommentPayload } from '@/types/comment.types';
+import { ApiResponse } from '@/types/common.types';
 
 export const commentApi = {
   async getCommentsByPostId(postId: string): Promise<Comment[]> {

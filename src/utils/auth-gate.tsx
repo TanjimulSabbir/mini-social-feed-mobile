@@ -1,20 +1,25 @@
-import {
-  syncPushTokenWithBackend,
-  sendTokenToBackend,
-} from "@/lib/push-notifications";
 import { useNotificationResponseListener } from "@/hooks/notifications/useNotificationResponseListener";
+import {
+  sendTokenToBackend,
+  syncPushTokenWithBackend,
+} from "@/lib/push-notifications";
 import { useAuthStore } from "@/store/auth.store";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 import * as Notifications from "expo-notifications";
 
+import { COLORS } from "@/constants/theme";
+
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isHydrated, isAuthenticated, hydrate } = useAuthStore();
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hydrate = useAuthStore((s) => s.hydrate);
+
   const hasSyncedRef = useRef(false);
 
   useEffect(() => {
     hydrate();
-  }, []);
+  }, [hydrate]);
 
   useEffect(() => {
     if (!isHydrated || !isAuthenticated) {
@@ -26,6 +31,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       hasSyncedRef.current = true;
       syncPushTokenWithBackend();
     }
+
     const sub = Notifications.addPushTokenListener((event) => {
       sendTokenToBackend(event.data);
     });
@@ -37,20 +43,22 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!isHydrated) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#071A1B",
-        }}
-      >
-        <ActivityIndicator size="large" color="#A3E635" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.active} />
       </View>
     );
   }
 
   return <>{children}</>;
 }
+
+const styles = {
+  loadingContainer: {
+    flex: 1 as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: COLORS.background,
+  },
+};
 
 export default AuthGate;
