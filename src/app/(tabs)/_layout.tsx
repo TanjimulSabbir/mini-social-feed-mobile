@@ -11,7 +11,7 @@ export default function TabsLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const { data } = useNotificationsInfinite({
-    enabled: isAuthenticated && isHydrated,
+    enabled: false,
   });
   const insets = useSafeAreaInsets();
 
