@@ -81,7 +81,7 @@ export default function SignupScreen() {
       >
         <View style={styles.header}>
           <View style={styles.logoBadge}>
-            <Ionicons name="sparkles" size={30} color="#A3E635" />
+            <Ionicons name="chatbubbles" size={30} color="#A3E635" />
           </View>
           <Text style={styles.appName}>MiniSocial</Text>
           <Text style={styles.title}>Create Account ✨</Text>
@@ -103,7 +103,7 @@ export default function SignupScreen() {
             name="name"
             label="FULL NAME"
             iconName="person-outline"
-            placeholder="Jane Doe"
+            placeholder="Tanjimul Sabbir"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="name"
@@ -119,7 +119,7 @@ export default function SignupScreen() {
             name="email"
             label="EMAIL ADDRESS"
             iconName="at-outline"
-            placeholder="you@example.com"
+            placeholder="tanjim@sabbir.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
